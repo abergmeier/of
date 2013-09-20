@@ -3,24 +3,25 @@
 #include "ofConstants.h"
 #include "ofColor.h"
 
-#if (_MSC_VER) || (__cplusplus>=201103L)
+#if (_MSC_VER) || _LIBCPP_VERSION
 // no tr1 in c++11
-#include <memory>
-#if __cplusplus>=201103L
+#	include <memory>
+#	if _LIBCPP_VERSION
 namespace std {
+	// this is a temporary fix while ofPtr is not deprecated.
 	struct __dynamic_cast_tag { };
-	}
-#endif
+}
+#	endif
 #else
 // import tr1
 // import smart pointers utils into std
-#include <tr1/memory>
+#	include <tr1/memory>
 namespace std {
-#if __cplusplus<201103L
+#	if __cplusplus<201103L
 	using std::tr1::shared_ptr;
 	using std::tr1::weak_ptr;
 	using std::tr1::enable_shared_from_this;
-#endif
+#	endif
 	using std::tr1::static_pointer_cast;
 	using std::tr1::dynamic_pointer_cast;
 	using std::tr1::const_pointer_cast;
@@ -180,13 +181,6 @@ public:
 		ofPtr(const std::shared_ptr<Tp1>& __r)
 	: std::shared_ptr<T>(__r) { }
 
-	  /*ofPtr(ofPtr&& __r)
-	  : std::tr1::shared_ptr<T>(std::move(__r)) { }
-
-	  template<typename Tp1>
-		ofPtr(ofPtr<Tp1>&& __r)
-		: std::tr1::shared_ptr<T>(std::move(__r)) { }*/
-
 	  template<typename Tp1>
 		explicit
 		ofPtr(const std::weak_ptr<Tp1>& __r)
@@ -201,14 +195,6 @@ public:
 	ofPtr(const ofPtr<Tp1>& __r, std::__dynamic_cast_tag)
 	: std::shared_ptr<T>(__r, std::__dynamic_cast_tag()) { }
 #endif
-	  /*template<typename Tp1, typename Del>
-		explicit
-		ofPtr(const std::tr1::unique_ptr<Tp1, Del>&) = delete;
-
-	  template<typename Tp1, typename Del>
-		explicit
-		ofPtr(std::tr1::unique_ptr<Tp1, Del>&& __r)
-	: std::tr1::shared_ptr<T>(std::move(__r)) { }*/
 };
 
 #if (_MSC_VER)
