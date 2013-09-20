@@ -3,11 +3,18 @@
 #include "ofConstants.h"
 #include "ofColor.h"
 
-#if (_MSC_VER)
+#if (_MSC_VER) || (__cplusplus>=201103L)
+// no tr1 in c++11
 #include <memory>
+#if __cplusplus>=201103L
+namespace std {
+	struct __dynamic_cast_tag { };
+	}
+#endif
 #else
-#include <tr1/memory>
+// import tr1
 // import smart pointers utils into std
+#include <tr1/memory>
 namespace std {
 #if __cplusplus<201103L
 	using std::tr1::shared_ptr;
@@ -20,6 +27,10 @@ namespace std {
 	using std::tr1::__dynamic_cast_tag;
 }
 #endif
+
+
+
+
 
 //----------------------------------------------------------
 // ofDeviceInfo
@@ -131,7 +142,6 @@ public:
       bool bAvailable;
 };
 
-
 //----------------------------------------------------------
 // ofPtr
 //----------------------------------------------------------
@@ -182,7 +192,6 @@ public:
 		ofPtr(const std::weak_ptr<Tp1>& __r)
 	: std::shared_ptr<T>(__r) { }
 
-	// tgfrerer: extends ofPtr facade to allow dynamic_pointer_cast, pt.1
 #if (_MSC_VER)
 	template<typename Tp1>
 	ofPtr(const ofPtr<Tp1>& __r, std::_Dynamic_tag)
@@ -202,7 +211,6 @@ public:
 	: std::tr1::shared_ptr<T>(std::move(__r)) { }*/
 };
 
-// tgfrerer: extends ofPtr facade to allow dynamic_pointer_cast, pt. 2
 #if (_MSC_VER)
 template<typename _Tp, typename _Tp1>
 ofPtr<_Tp>
