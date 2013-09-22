@@ -131,7 +131,7 @@ string ofGetTimestampString(){
 
 //specify the string format - eg: %Y-%m-%d-%H-%M-%S-%i ( 2011-01-15-18-29-35-299 )
 //--------------------------------------------------
-string ofGetTimestampString(string timestampFormat){
+string ofGetTimestampString(const string& timestampFormat){
 	Poco::LocalDateTime now;
 	return Poco::DateTimeFormatter::format(now, timestampFormat);
 }

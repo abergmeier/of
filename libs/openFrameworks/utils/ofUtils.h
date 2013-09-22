@@ -31,7 +31,7 @@ unsigned long long ofGetSystemTimeMicros( );			// system time in microseconds;
 
 		//returns 
 string ofGetTimestampString();
-string ofGetTimestampString(string timestampFormat);
+string ofGetTimestampString(const string& timestampFormat);
 
 
 int     ofGetYear();
