@@ -124,9 +124,8 @@ unsigned int ofGetUnixTime(){
 //default ofGetTimestampString returns in this format: 2011-01-15-18-29-35-299
 //--------------------------------------------------
 string ofGetTimestampString(){
-	string timeFormat = "%Y-%m-%d-%H-%M-%S-%i";
-	Poco::LocalDateTime now;
-	return Poco::DateTimeFormatter::format(now, timeFormat);
+	const string timeFormat = "%Y-%m-%d-%H-%M-%S-%i";
+	return ofGetTimestampString(timeFormat);
 }
 
 //specify the string format - eg: %Y-%m-%d-%H-%M-%S-%i ( 2011-01-15-18-29-35-299 )
