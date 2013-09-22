@@ -48,6 +48,7 @@ static ofPtr<ofAppBaseWindow> 		window;
 	#include "ofAppGLFWWindow.h"
 #endif
 
+#ifdef OF_USE_DEPRECATED
 // this is hacky only to provide bw compatibility, a shared_ptr should always be initialized using a shared_ptr
 // it shouldn't be a problem since it's only called from main and never deleted from outside
 // also since old versions created the window in the stack, if this function is called we create a shared_ptr that never deletes
@@ -56,6 +57,7 @@ static void noopDeleter(ofAppBaseWindow*){}
 void ofSetupOpenGL(ofAppBaseWindow * windowPtr, int w, int h, int screenMode){
 	ofSetupOpenGL(ofPtr<ofAppBaseWindow>(windowPtr,std::ptr_fun(noopDeleter)),w,h,screenMode);
 }
+#endif //OF_USE_DEPRECATED
 
 void ofExitCallback();
 

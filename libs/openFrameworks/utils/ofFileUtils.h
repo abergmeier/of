@@ -255,8 +255,9 @@ public:
 	void sort();
 
 	unsigned int size();
+#ifdef OF_USE_DEPRECATED
 	int numFiles(); // numFiles is deprecated, use size()
-
+#endif
 
 
 	//if you want access to a few other things

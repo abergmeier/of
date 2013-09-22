@@ -1209,10 +1209,12 @@ unsigned int ofDirectory::size(){
 	return files.size();
 }
 
+#ifdef OF_USE_DEPRECATED
 //------------------------------------------------------------------------------------------------------------
 int ofDirectory::numFiles(){
 	return size();
 }
+#endif
 
 //------------------------------------------------------------------------------------------------------------
 // ofDirectory Static Methods

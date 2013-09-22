@@ -133,7 +133,7 @@ enum ofTargetPlatform{
 	// to normal (since the high res timer might give the OS
 	// problems)
 	// info: http://www.geisswerks.com/ryan/FAQS/timing.html
-
+	#define OF_USE_DEPRECATED
 #endif
 
 #ifdef TARGET_OSX
@@ -148,6 +148,7 @@ enum ofTargetPlatform{
 	#if defined(__LITTLE_ENDIAN__)
 		#define TARGET_LITTLE_ENDIAN		// intel cpu
 	#endif
+	#define OF_USE_DEPRECATED
 #endif
 
 #ifdef TARGET_LINUX
@@ -185,7 +186,7 @@ enum ofTargetPlatform{
         // some things for serial compilation:
         #define B14400	14400
         #define B28800	28800
-
+	#define OF_USE_DEPRECATED
 #endif
 
 
@@ -197,7 +198,8 @@ enum ofTargetPlatform{
 	#import <OpenGLES/ES2/glext.h>
 
 	
-	#define TARGET_LITTLE_ENDIAN		// arm cpu	
+	#define TARGET_LITTLE_ENDIAN		// arm cpu
+	#define OF_USE_DEPRECATED
 #endif
 
 #ifdef TARGET_ANDROID
@@ -211,6 +213,7 @@ enum ofTargetPlatform{
 	#include <GLES2/gl2ext.h>
 
 	#define TARGET_LITTLE_ENDIAN
+	#define OF_USE_DEPRECATED
 #endif
 
 #ifdef TARGET_OPENGLES
