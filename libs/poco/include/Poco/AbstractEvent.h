@@ -171,7 +171,9 @@ class AbstractEvent
 	/// to create the PriorityDelegate.
 {
 public:
-	AbstractEvent():
+	typedef TArgs Args;
+
+	AbstractEvent(): 
 		_executeAsync(this, &AbstractEvent::executeAsyncImpl),
 		_enabled(true)
 	{

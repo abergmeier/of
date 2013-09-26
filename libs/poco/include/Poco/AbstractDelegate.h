@@ -124,7 +124,6 @@ public:
 	}
 };
 
-
 } // namespace Poco
 
 
