@@ -1,7 +1,7 @@
 #pragma once
 
 #include "ofMain.h"
-#include "model3DS.h"
+#include "3DS/model3DS.h"
 
 class ofx3DModelLoader{
 
