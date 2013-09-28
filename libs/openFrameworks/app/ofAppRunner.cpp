@@ -74,6 +74,7 @@ void ofExitCallback();
 	}
 #endif
 
+#ifndef TARGET_EMSCRIPTEN
 // the same hack but in this case the shared_ptr will delete, old versions created the testApp as new...
 //--------------------------------------
 void ofRunApp(ofBaseApp * OFSA){
@@ -138,6 +139,7 @@ void ofRunApp(ofBaseApp * OFSA){
 
 	window->runAppViaInfiniteLoop(OFSAptr.get());
 }
+#endif //!TARGET_EMSCRIPTEN
 
 //--------------------------------------
 void ofSetupOpenGL(ofPtr<ofAppBaseWindow> windowPtr, int w, int h, int screenMode){
