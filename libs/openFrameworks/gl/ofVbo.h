@@ -9,6 +9,22 @@
 #include "ofGLUtils.h"
 #include <map>
 
+#if defined( TARGET_EMSCRIPTEN )
+	#define OF_GL_FIXED        false
+	#define OF_GL_PROGRAMMABLE true
+#elif defined( TARGET_OPENGLES )
+	#if GL_VERSION_ES_CM_1_0 || GL_VERSION_ES_CM_1_1
+		#define OF_GL_FIXED true
+	#else
+		#define OF_GL_FIXED false
+	#endif //GL_VERSION_ES_
+	#define OF_GL_PROGRAMMABLE true
+#else
+	// Modify the compiling OpenGL variants necessary for your platform
+	#define OF_GL_FIXED        true
+	#define OF_GL_PROGRAMMABLE true
+#endif
+
 class ofVbo {
 public:
 	
@@ -99,6 +115,15 @@ public:
 	static void enableVAOs();
 
 private:
+	void enableVertexArray  ( bool programable ) const noexcept;
+	void disableVertexArray ( bool programable ) const noexcept;
+	void enableColorArray   ( bool programable ) const noexcept;
+	void disableColorArray  ( bool programable ) const noexcept;
+	void enableNormalArray  ( bool programable ) const noexcept;
+	void disableNormalArray ( bool programable ) const noexcept;
+	void enableTextureArray ( bool programable ) const noexcept;
+	void disableTextureArray( bool programable ) const noexcept;
+
 	GLuint vaoID;
 	bool vaoChanged;
 

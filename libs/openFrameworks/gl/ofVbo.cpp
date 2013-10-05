@@ -12,6 +12,7 @@
 
 #include <map>
 #include <set>
+#include <cassert>
 
 bool ofVbo::vaoChecked = false;
 bool ofVbo::supportVAOs = true;
@@ -628,6 +629,161 @@ GLuint ofVbo::getIndexId() const {
 	return indexId;
 }
 
+void
+ofVbo::enableVertexArray( bool programmable ) const noexcept {
+	glBindBuffer(GL_ARRAY_BUFFER, vertId);
+	if( programmable ) {
+#if OF_GL_PROGRAMMABLE
+		glEnableVertexAttribArray(ofShader::POSITION_ATTRIBUTE);
+		glVertexAttribPointer(ofShader::POSITION_ATTRIBUTE, vertSize, GL_FLOAT, GL_FALSE, vertStride, 0);
+#else
+		assert( false );
+#endif
+	} else {
+#if OF_GL_FIXED
+		glEnableClientState(GL_VERTEX_ARRAY);
+		glVertexPointer(vertSize, GL_FLOAT, vertStride, 0);
+#else
+		assert( false );
+#endif
+	}
+}
+
+void
+ofVbo::disableVertexArray( bool programmable ) const noexcept {
+	if( programmable ){
+#if OF_GL_PROGRAMMABLE
+		glDisableVertexAttribArray(ofShader::POSITION_ATTRIBUTE);
+#else
+		assert( false );
+#endif
+	}else{
+#if OF_GL_FIXED
+		glDisableClientState(GL_VERTEX_ARRAY);
+#else
+		assert( false );
+#endif
+	}
+}
+
+void
+ofVbo::enableColorArray( bool programmable ) const noexcept {
+	glBindBuffer(GL_ARRAY_BUFFER, colorId);
+	if( programmable ) {
+#if OF_GL_PROGRAMMABLE
+		glEnableVertexAttribArray(ofShader::COLOR_ATTRIBUTE);
+		glVertexAttribPointer(ofShader::COLOR_ATTRIBUTE, 4, GL_FLOAT, GL_FALSE, colorStride, 0);
+#else
+		assert( false );
+#endif
+	} else {
+#if OF_GL_FIXED
+		glEnableClientState(GL_COLOR_ARRAY);
+		glColorPointer(4, GL_FLOAT, colorStride, 0);
+#else
+		assert( false );
+#endif
+	}
+}
+
+void
+ofVbo::disableColorArray( bool programmable ) const noexcept {
+	if( programmable ) {
+#if OF_GL_PROGRAMMABLE
+		glDisableVertexAttribArray(ofShader::COLOR_ATTRIBUTE);
+#else
+		assert( false );
+#endif
+	} else {
+#if OF_GL_FIXED
+		glDisableClientState(GL_COLOR_ARRAY);
+#else
+		assert( false );
+#endif
+	}
+}
+
+void
+ofVbo::enableNormalArray( bool programmable ) const noexcept {
+	glBindBuffer(GL_ARRAY_BUFFER, normalId);
+	if( programmable ){
+#if OF_GL_PROGRAMMABLE
+		// tig: note that we set the 'Normalize' flag to true here, assuming that mesh normals need to be
+		// normalized while being uploaded to GPU memory.
+		// http://www.opengl.org/sdk/docs/man/xhtml/glVertexAttribPointer.xml
+		// Normalizing the normals on the shader is probably faster, but sending non-normalized normals is
+		// more prone to lead to artifacts difficult to diagnose, especially with the built-in 3D primitives.
+		// If you need to optimise this, and you've dug this far through the code, you are most probably
+		// able to roll your own client code for binding & rendering vbos anyway...
+		glEnableVertexAttribArray(ofShader::NORMAL_ATTRIBUTE);
+		glVertexAttribPointer(ofShader::NORMAL_ATTRIBUTE, 3, GL_FLOAT, GL_TRUE, normalStride, 0);
+#else
+		assert( false );
+#endif
+	} else {
+#if OF_GL_FIXED
+		glEnableClientState(GL_NORMAL_ARRAY);
+		glNormalPointer(GL_FLOAT, normalStride, 0);
+#else
+		assert( false );
+#endif
+	}
+}
+
+void
+ofVbo::disableNormalArray( bool programmable ) const noexcept {
+	if( programmable ){
+#if OF_GL_PROGRAMMABLE
+		glDisableVertexAttribArray(ofShader::NORMAL_ATTRIBUTE);
+#else
+		assert( false );
+#endif
+	} else {
+#if OF_GL_FIXED
+		glDisableClientState(GL_NORMAL_ARRAY);
+#else
+		assert( false );
+#endif
+	}
+}
+
+void
+ofVbo::enableTextureArray( bool programmable ) const noexcept {
+	glBindBuffer(GL_ARRAY_BUFFER, texCoordId);
+	if( programmable ) {
+#if OF_GL_PROGRAMMABLE
+		glEnableVertexAttribArray(ofShader::TEXCOORD_ATTRIBUTE);
+		glVertexAttribPointer(ofShader::TEXCOORD_ATTRIBUTE, 2, GL_FLOAT, GL_FALSE, texCoordStride, 0);
+#else
+		assert( false );
+#endif
+	} else {
+#if OF_GL_FIXED
+		glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+		glTexCoordPointer(2, GL_FLOAT, texCoordStride, 0);
+#else
+		assert( false );
+#endif
+	}
+}
+
+void
+ofVbo::disableTextureArray( bool programmable ) const noexcept {
+	if( programmable ) {
+#if OF_GL_PROGRAMMABLE
+		glDisableVertexAttribArray(ofShader::TEXCOORD_ATTRIBUTE);
+#else
+		assert( false );
+#endif
+	} else {
+#if OF_GL_FIXED
+		glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+#else
+		assert( false );
+#endif
+	}
+}
+
 //--------------------------------------------------------------
 void ofVbo::bind(){
 	if(supportVAOs){
@@ -647,78 +803,27 @@ void ofVbo::bind(){
 	if(vaoChanged || !supportVAOs){
 		bool programmable = ofIsGLProgrammableRenderer();
 		if(bUsingVerts){
-			glBindBuffer(GL_ARRAY_BUFFER, vertId);
-			if(!programmable){
-				glEnableClientState(GL_VERTEX_ARRAY);
-				glVertexPointer(vertSize, GL_FLOAT, vertStride, 0);
-			}else{
-				glEnableVertexAttribArray(ofShader::POSITION_ATTRIBUTE);
-				glVertexAttribPointer(ofShader::POSITION_ATTRIBUTE, vertSize, GL_FLOAT, GL_FALSE, vertStride, 0);
-			}
+			enableVertexArray( programmable );
 		}else if(supportVAOs){
-			if(!programmable){
-				glDisableClientState(GL_VERTEX_ARRAY);
-			}else{
-				glDisableVertexAttribArray(ofShader::POSITION_ATTRIBUTE);
-			}
+			disableVertexArray( programmable );
 		}
 
 		if(bUsingColors) {
-			glBindBuffer(GL_ARRAY_BUFFER, colorId);
-			if(!programmable){
-				glEnableClientState(GL_COLOR_ARRAY);
-				glColorPointer(4, GL_FLOAT, colorStride, 0);
-			}else{
-				glEnableVertexAttribArray(ofShader::COLOR_ATTRIBUTE);
-				glVertexAttribPointer(ofShader::COLOR_ATTRIBUTE, 4, GL_FLOAT, GL_FALSE, colorStride, 0);
-			}
+			enableColorArray( programmable );
 		}else if(supportVAOs){
-			if(!programmable){
-				glDisableClientState(GL_COLOR_ARRAY);
-			}else{
-				glDisableVertexAttribArray(ofShader::COLOR_ATTRIBUTE);
-			}
+			disableColorArray( programmable );
 		}
 
 		if(bUsingNormals) {
-			glBindBuffer(GL_ARRAY_BUFFER, normalId);
-			if(!programmable){
-				glEnableClientState(GL_NORMAL_ARRAY);
-				glNormalPointer(GL_FLOAT, normalStride, 0);
-			}else{
-				// tig: note that we set the 'Normalize' flag to true here, assuming that mesh normals need to be
-				// normalized while being uploaded to GPU memory.
-				// http://www.opengl.org/sdk/docs/man/xhtml/glVertexAttribPointer.xml
-				// Normalizing the normals on the shader is probably faster, but sending non-normalized normals is
-				// more prone to lead to artifacts difficult to diagnose, especially with the built-in 3D primitives.
-				// If you need to optimise this, and you've dug this far through the code, you are most probably
-				// able to roll your own client code for binding & rendering vbos anyway...
-				glEnableVertexAttribArray(ofShader::NORMAL_ATTRIBUTE);
-				glVertexAttribPointer(ofShader::NORMAL_ATTRIBUTE, 3, GL_FLOAT, GL_TRUE, normalStride, 0);
-			}
+			enableNormalArray( programmable );
 		}else if(supportVAOs){
-			if(!programmable){
-				glDisableClientState(GL_NORMAL_ARRAY);
-			}else{
-				glDisableVertexAttribArray(ofShader::NORMAL_ATTRIBUTE);
-			}
+			disableNormalArray( programmable );
 		}
 
 		if(bUsingTexCoords) {
-			glBindBuffer(GL_ARRAY_BUFFER, texCoordId);
-			if(!programmable){
-				glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-				glTexCoordPointer(2, GL_FLOAT, texCoordStride, 0);
-			}else{
-				glEnableVertexAttribArray(ofShader::TEXCOORD_ATTRIBUTE);
-				glVertexAttribPointer(ofShader::TEXCOORD_ATTRIBUTE, 2, GL_FLOAT, GL_FALSE, texCoordStride, 0);
-			}
+			enableTextureArray( programmable );
 		}else if(supportVAOs){
-			if(!programmable){
-				glDisableClientState(GL_TEXTURE_COORD_ARRAY);
-			}else{
-				glDisableVertexAttribArray(ofShader::TEXCOORD_ATTRIBUTE);
-			}
+			disableTextureArray( programmable );
 		}
 
 		map<int,GLuint>::iterator it;
@@ -743,42 +848,32 @@ void ofVbo::bind(){
 void ofVbo::unbind() {
 	if(supportVAOs){
 		glBindVertexArray(0);
-		if(!ofIsGLProgrammableRenderer()){
+		const auto programmable = ofIsGLProgrammableRenderer();
+		if( !programmable ){
 			glBindBuffer(GL_ARRAY_BUFFER, 0);
 			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 			if(bUsingColors){
-				glDisableClientState(GL_COLOR_ARRAY);
+				disableColorArray( programmable );
 			}
 			if(bUsingNormals){
-				glDisableClientState(GL_NORMAL_ARRAY);
+				disableNormalArray( programmable );
 			}
 			if(bUsingTexCoords){
-				glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+				disableTextureArray( programmable );
 			}
 		}
 	}else{
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-		if(ofIsGLProgrammableRenderer()){
-			if(bUsingColors){
-				glDisableVertexAttribArray(ofShader::COLOR_ATTRIBUTE);
-			}
-			if(bUsingNormals){
-				glDisableVertexAttribArray(ofShader::NORMAL_ATTRIBUTE);
-			}
-			if(bUsingTexCoords){
-				glDisableVertexAttribArray(ofShader::TEXCOORD_ATTRIBUTE);
-			}
-		}else{
-			if(bUsingColors){
-				glDisableClientState(GL_COLOR_ARRAY);
-			}
-			if(bUsingNormals){
-				glDisableClientState(GL_NORMAL_ARRAY);
-			}
-			if(bUsingTexCoords){
-				glDisableClientState(GL_TEXTURE_COORD_ARRAY);
-			}
+		const auto programmable = ofIsGLProgrammableRenderer();
+		if( bUsingColors ){
+			disableColorArray( programmable );
+		}
+		if( bUsingNormals ){
+			disableNormalArray( programmable );
+		}
+		if( bUsingTexCoords ){
+			disableTextureArray( programmable );
 		}
 	}
 	bBound   = false;

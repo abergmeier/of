@@ -5,6 +5,7 @@
 #include "ofPixels.h"
 #include "ofGLUtils.h"
 #include <map>
+#include <cassert>
 
 //----------------------------------------------------------
 // static
@@ -360,7 +361,11 @@ void ofTexture::allocate(const ofTextureData & textureData, int glFormat, int pi
 	glTexParameterf(texData.textureTarget, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
 	if (!ofIsGLProgrammableRenderer()){
+#if OF_GL_FIXED
 		glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+#else
+		assert( false );
+#endif
 	}
 	disableTextureTarget();
 
@@ -548,7 +553,11 @@ void ofTexture::loadData(const void * data, int w, int h, int glFormat, int glTy
 		
 		glHint(GL_GENERATE_MIPMAP_HINT, GL_NICEST);
 		if(!ofGetGLProgrammableRenderer()){
+#if OF_GL_FIXED
 			glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+#else
+			assert( false );
+#endif
 		}
 #ifndef TARGET_OPENGLES		
 		glTexParameteri(texData.textureTarget, GL_GENERATE_MIPMAP_SGIS, true);
