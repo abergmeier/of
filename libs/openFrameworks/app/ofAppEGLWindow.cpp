@@ -32,7 +32,7 @@
 #include "ofGLProgrammableRenderer.h"
 #include <assert.h>
 
-
+// FIXME: I belong in a $%&§ header!
 void ofGLReadyCallback();
 
 // native events
