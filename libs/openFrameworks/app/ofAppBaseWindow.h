@@ -74,5 +74,8 @@ public:
 	virtual HGLRC getWGLContext(){return 0;}
 	virtual HWND getWin32Window(){return 0;}
 #endif
+
+public:
+	void processFrame( std::function<int()> kbfunc, std::function<int()> charfunc ) noexcept;
 };
 

@@ -98,38 +98,12 @@ void ofAppNoWindow::runAppViaInfiniteLoop(ofBaseApp * appPtr){
 		<< "***"<< endl
 		<< "*** press Esc or Ctrl-C to quit" << endl
 		<< "***" << endl;
+
+	auto frameFunc = std::bind( &ofAppBaseWindow::processFrame, this, &kbhit, &getch );
+
 	while (true)
 	{
-        /// listen for escape
-        #ifdef TARGET_WIN32
-        if (GetAsyncKeyState(VK_ESCAPE))
-            ofNotifyKeyPressed(OF_KEY_ESC);
-        #endif
-
-		#if defined TARGET_OSX || defined TARGET_LINUX
-		while ( kbhit() )
-		{
-			int key = getch();
-			if ( key == 27 )
-			{
-				ofNotifyKeyPressed(OF_KEY_ESC);
-			}
-			else if ( key == /* ctrl-c */ 3 )
-			{
-				ofLogNotice("ofAppNoWindow") << "Ctrl-C pressed" << endl;
-				OF_EXIT_APP(0);
-			}
-			else
-			{
-				ofNotifyKeyPressed(key);
-			}
-		}
-		#endif
-
-
-		ofNotifyUpdate();
-		ofNotifyDraw();
-
+		frameFunc();
 	}
 }
 
