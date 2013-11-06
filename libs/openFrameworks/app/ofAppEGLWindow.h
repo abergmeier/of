@@ -28,7 +28,7 @@
 
 #include "ofBaseApp.h"
 
-#include "ofAppBaseWindow.h"
+#include "BaseEGLWindow.hpp"
 #include "ofThread.h"
 #include "ofImage.h"
 
@@ -54,7 +54,6 @@
 #include <X11/Xutil.h>
 
 #include <queue>
-#include <map>
 
 // TODO: this shold be passed in with the other window settings, like window alpha, etc.
 enum ofAppEGLWindowType {
@@ -66,7 +65,7 @@ enum ofAppEGLWindowType {
 typedef map<EGLint,EGLint> ofEGLAttributeList;
 typedef map<EGLint,EGLint>::iterator ofEGLAttributeListIterator;
 
-class ofAppEGLWindow : public ofAppBaseWindow, public ofThread {
+class ofAppEGLWindow : public of::AbstractEGLWindow, public ofThread {
 public:
 
 	struct Settings;
@@ -77,14 +76,10 @@ public:
 
 	void exit(ofEventArgs &e);
 
-    void setGLESVersion(int glesVersion);
 	virtual void setupOpenGL(int w, int h, int screenMode);
 
 	virtual void initializeWindow();
 	virtual void runAppViaInfiniteLoop(ofBaseApp * appPtr);
-
-	virtual void hideCursor();
-	virtual void showCursor();
 
 	virtual void	setWindowPosition(int x, int y);
 	virtual void	setWindowShape(int w, int h);
@@ -103,16 +98,9 @@ public:
 
 	virtual void	setWindowTitle(string title); // TODO const correct
 
-	virtual int		getWindowMode(); // TODO use enum
-
-	virtual void	setFullscreen(bool fullscreen);
-	virtual void	toggleFullscreen();
-
 	virtual void	enableSetupScreen();
 	virtual void	disableSetupScreen();
 
-	virtual void	setVerticalSync(bool enabled);
-	
 	struct Settings {
 		ofAppEGLWindowType eglWindowPreference;  // what window type is preferred?
 		EGLint eglWindowOpacity; // 0-255 window alpha value
@@ -147,7 +135,6 @@ public:
 protected:
 	void init(Settings settings = Settings());
 
-	void idle();
 	void display();
 
 	void setWindowRect(const ofRectangle& requestedWindowRect);
@@ -162,19 +149,11 @@ protected:
 	int getWindowWidth();
 	int getWindowHeight();
 
-	bool     terminate;
-
-	int      windowMode;
-	bool     bNewScreenMode;
 	int      buttonInUse;
 	bool     bEnableSetupScreen;
-	bool	 bShowCursor;
 
 	string   eglDisplayString;
-	int      nFramesSinceWindowResized;
 	ofOrientation orientation;
-	ofBaseApp *  ofAppPtr;
-
 
 	void threadedFunction();
 	queue<ofMouseEventArgs> mouseEvents;
@@ -197,19 +176,7 @@ protected:
 // EGL
 //------------------------------------------------------------
 
-	bool createSurface();
-	bool destroySurface();
 
-	// bool resizeSurface();
-
-	EGLDisplay eglDisplay;  // EGL display connection
-	EGLSurface eglSurface;
-	EGLContext eglContext;
-
-    EGLConfig eglConfig;
-
-	EGLint eglVersionMajor;
-    EGLint eglVersionMinor;
 
 //------------------------------------------------------------
 // PLATFORM SPECIFIC WINDOWING
@@ -218,8 +185,6 @@ protected:
 //------------------------------------------------------------
 // WINDOWING
 //------------------------------------------------------------
-	// EGL window
-	ofRectangle nonFullscreenWindowRect; // the rectangle describing the non-fullscreen window
 	ofRectangle currentWindowRect; // the rectangle describing the current device
 
 	bool createWindow(const ofRectangle& requestedWindowRect);
@@ -228,7 +193,6 @@ protected:
 	bool isUsingX11;
 
 	bool isWindowInited;
-	bool isSurfaceInited;
 
 	void initNative();
 	void exitNative();
@@ -239,6 +203,8 @@ protected:
 #ifdef TARGET_RASPBERRY_PI
 	void initRPiNative();
 	void exitRPiNative();
+
+	ofRectangle nonFullscreenWindowRect; // the rectangle describing the non-fullscreen window
 
 	EGL_DISPMANX_WINDOW_T dispman_native_window; // rpi
 
@@ -283,9 +249,5 @@ protected:
 	void readNativeUDevEvents();
 
 	void handleX11Event(const XEvent& event);
-
-private:
-	Settings 			settings;
-	int glesVersion;
 
 };

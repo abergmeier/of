@@ -158,32 +158,6 @@ static const struct {
   "\0\377\203\377\377\377\0",
 };
 
-// from http://cantuna.googlecode.com/svn-history/r16/trunk/src/screen.cpp
-#define CASE_STR(x,y) case x: str = y; break
-
-static const char* eglErrorString(EGLint err) {
-    string str;
-    switch (err) {
-        CASE_STR(EGL_SUCCESS, "no error");
-        CASE_STR(EGL_NOT_INITIALIZED, "EGL not, or could not be, initialized");
-        CASE_STR(EGL_BAD_ACCESS, "access violation");
-        CASE_STR(EGL_BAD_ALLOC, "could not allocate resources");
-        CASE_STR(EGL_BAD_ATTRIBUTE, "invalid attribute");
-        CASE_STR(EGL_BAD_CONTEXT, "invalid context specified");
-        CASE_STR(EGL_BAD_CONFIG, "invald frame buffer configuration specified");
-        CASE_STR(EGL_BAD_CURRENT_SURFACE, "current window, pbuffer or pixmap surface is no longer valid");
-        CASE_STR(EGL_BAD_DISPLAY, "invalid display specified");
-        CASE_STR(EGL_BAD_SURFACE, "invalid surface specified");
-        CASE_STR(EGL_BAD_MATCH, "bad argument match");
-        CASE_STR(EGL_BAD_PARAMETER, "invalid paramater");
-        CASE_STR(EGL_BAD_NATIVE_PIXMAP, "invalid NativePixmap");
-        CASE_STR(EGL_BAD_NATIVE_WINDOW, "invalid NativeWindow");
-        CASE_STR(EGL_CONTEXT_LOST, "APM event caused context loss");
-        default: str = "unknown error " + err; break;
-    }
-    return str.c_str();
-}
-
 
 // X11 events
   #include <X11/XKBlib.h>
@@ -254,16 +228,6 @@ ofAppEGLWindow::~ofAppEGLWindow() {
 }
 
 //------------------------------------------------------------
-EGLDisplay ofAppEGLWindow::getEglDisplay() const {
-  return eglDisplay;
-}
-
-//------------------------------------------------------------
-EGLSurface ofAppEGLWindow::getEglSurface() const {
-  return eglSurface;
-}
-
-//------------------------------------------------------------
 EGLContext ofAppEGLWindow::getEglContext() const {
   return eglContext;
 }
@@ -300,7 +264,7 @@ void ofAppEGLWindow::init(Settings _settings) {
 
     windowMode      = OF_WINDOW;
     bNewScreenMode  = true;
-    nFramesSinceWindowResized = 0;
+    nFramesSinceResized = 0;
     buttonInUse     = 0;
     bEnableSetupScreen  = true;
     eglDisplayString   = "";
@@ -431,11 +395,6 @@ EGLNativeDisplayType ofAppEGLWindow::getNativeDisplay() {
   }
 }
 
-
-void ofAppEGLWindow::setGLESVersion(int _glesVersion){
-    glesVersion = _glesVersion;
-}
-
 //------------------------------------------------------------
 void ofAppEGLWindow::setupOpenGL(int w, int h, int screenMode) {
 
@@ -483,257 +442,6 @@ void ofAppEGLWindow::setupPeripherals() {
 
     } else {
         ofLogError("ofAppEGLWindow") << "setupPeripherals(): peripherals not supported on X11";
-    }
-}
-
-//------------------------------------------------------------
-bool ofAppEGLWindow::createSurface() {
-
-  EGLNativeWindowType nativeWindow = getNativeWindow();
-  EGLNativeDisplayType display = getNativeDisplay();
-
-  ofLogNotice("ofAppEGLWindow") << "createSurface(): setting up EGL Display";
-    // get an EGL eglDisplay connection
-    
-    isSurfaceInited = false;
-
-    EGLint result;
-
-    if(display==0){
-      eglDisplay = eglGetDisplay(EGL_DEFAULT_DISPLAY);
-    }else{
-      eglDisplay = eglGetDisplay(display);
-    }
-
-    if(eglDisplay == EGL_NO_DISPLAY) {
-      ofLogNotice("ofAppEGLWindow") << "createSurface(): eglGetDisplay returned: " << eglDisplay;
-     return false;
-    }else{
-      ofLogNotice("ofAppEGLWindow") << "createSurface(): EGL Display correctly set";
-    }
-
-    // initialize the EGL eglDisplay connection
-    result = eglInitialize(eglDisplay, 
-                           &eglVersionMajor, 
-                           &eglVersionMinor);
-
-    if(result == EGL_BAD_DISPLAY) {
-//  eglDisplay is not an EGL connection
-        ofLogError("ofAppEGLWindow") << "createSurface(): eglInitialize returned EGL_BAD_DISPLAY";
-        return false;
-    } else if(result == EGL_NOT_INITIALIZED) {
-        // eglDisplay cannot be intitialized
-        ofLogError("ofAppEGLWindow") << "createSurface(): eglInitialize returned EGL_NOT_INITIALIZED";
-        return false;
-    } else if(result == EGL_FALSE) {
-        // eglinitialize was not initialiezd
-        ofLogError("ofAppEGLWindow") << "createSurface(): eglInitialize returned EGL_FALSE";
-        return false;
-    } else {
-        // result == EGL_TRUE
-        // success!
-    }
-
-    EGLint glesVersion;
-    int glesVersionForContext;
-
-    if(ofGetCurrentRenderer()) {
-      ofLogNotice("ofAppEGLWindow") << "createSurface(): current renderer type: " << ofGetCurrentRenderer()->getType();
-    } else {
-      ofLogNotice("ofAppEGLWindow") << "createSurface(): no current renderer selected";
-    }
-
-    if(this->glesVersion==2){
-      glesVersion = EGL_OPENGL_ES2_BIT;
-      glesVersionForContext = 2;
-        ofLogNotice("ofAppEGLWindow") << "createSurface(): GLES2 renderer detected";
-    }else{
-      glesVersion = EGL_OPENGL_ES_BIT;
-      glesVersionForContext = 1;
-      ofLogNotice("ofAppEGLWindow") << "createSurface(): default renderer detected";
-    }
-    
-    ofEGLAttributeListIterator iter, iterEnd;
-    int i;
-
-    // each attribute has 2 values, and we need one extra for the EGL_NONE terminator
-    EGLint attribute_list_framebuffer_config[settings.frameBufferAttributes.size() * 2 + 3];
-
-    iter = settings.frameBufferAttributes.begin();
-    iterEnd = settings.frameBufferAttributes.end();
-    i = 0;
-    for(; iter != iterEnd; iter++) {
-        attribute_list_framebuffer_config[i++] = iter->first;
-        attribute_list_framebuffer_config[i++] = iter->second;
-    }
-	attribute_list_framebuffer_config[i++] = EGL_RENDERABLE_TYPE;
-	attribute_list_framebuffer_config[i++] = glesVersion; //openGL ES version
-    attribute_list_framebuffer_config[i] = EGL_NONE; // add the terminator
-
-    EGLint num_configs;
-
-    // get an appropriate EGL frame buffer configuration
-    // http://www.khronos.org/registry/egl/sdk/docs/man/xhtml/eglChooseConfig.html
-    result = eglChooseConfig(eglDisplay, 
-                             attribute_list_framebuffer_config, 
-                             &eglConfig, 
-                             1, // we only want the first one.  if we want more, 
-                                // we need to pass in an array.
-                                // we are optimistic and don't give it more chances
-                                // to find a good configuration
-                             &num_configs);
-
-    if(result == EGL_FALSE) {
-        EGLint error = eglGetError();
-        ofLogError("ofAppEGLWindow") << "createSurface(): error finding valid configuration based on settings: " << eglErrorString(error);
-        return false;
-    }
-
-    if(num_configs <= 0 || eglConfig == NULL) {
-        ofLogError("ofAppEGLWindow") << "createSurface(): no matching configs were found, num_configs: " << num_configs;
-        return false;
-    }
-
-
-    // each attribute has 2 values, and we need one extra for the EGL_NONE terminator
-    EGLint attribute_list_window_surface[settings.windowSurfaceAttributes.size() * 2 + 1];
-
-    iter = settings.windowSurfaceAttributes.begin();
-    iterEnd = settings.windowSurfaceAttributes.end();
-
-    i = 0;
-    for(; iter != iterEnd; iter++) {
-        attribute_list_window_surface[i++] = iter->first;
-        attribute_list_window_surface[i++] = iter->second;
-    }
-    attribute_list_window_surface[i] = EGL_NONE; // add the terminator
-
-    // create a surface
-    eglSurface = eglCreateWindowSurface( eglDisplay, // our display handle 
-                                         eglConfig,    // our first config
-                                         nativeWindow, // our native window
-                                         attribute_list_window_surface); // surface attribute list
-    
-    if(eglSurface == EGL_NO_SURFACE) {
-        EGLint error = eglGetError();
-        switch(error) {
-            case EGL_BAD_MATCH:
-                ofLogError("ofAppEGLWindow") << "createSurface(): error creating surface: EGL_BAD_MATCH " << eglErrorString(error);  
-                ofLogError("ofAppEGLWindow") << "createSurface(): check window and EGLConfig attributes to determine compatibility, ";
-                ofLogError("ofAppEGLWindow") << "createSurface(): or verify that the EGLConfig supports rendering to a window";
-                 break;
-            case EGL_BAD_CONFIG:
-                ofLogError("ofAppEGLWindow") << "createSurface(): error creating surface: EGL_BAD_CONFIG " << eglErrorString(error);
-                ofLogError("ofAppEGLWindow") << "createSurface(): verify that provided EGLConfig is valid";
-                 break;
-            case EGL_BAD_NATIVE_WINDOW:
-                ofLogError("ofAppEGLWindow") << "createSurface(): error creating surface: EGL_BAD_NATIVE_WINDOW " << eglErrorString(error);
-                ofLogError("ofAppEGLWindow") << "createSurface(): verify that provided EGLNativeWindow is valid";
-                 break;
-            case EGL_BAD_ALLOC:
-                ofLogError("ofAppEGLWindow") << "createSurface(): error creating surface: EGL_BAD_ALLOC " << eglErrorString(error);
-                ofLogError("ofAppEGLWindow") << "createSurface(): not enough resources available";
-                 break;
-             default:
-              ofLogError("ofAppEGLWindow") << "createSurface(): error creating surface: << " << error << eglErrorString(error);
-           } 
-
-        return false;
-    }else{
-        ofLogNotice("ofAppEGLWindow") << "createSurface(): surface created correctly";
-    }
-
-  // get an appropriate EGL frame buffer configuration
-  result = eglBindAPI(EGL_OPENGL_ES_API);
-
-  if(result == EGL_FALSE) {
-      ofLogError("ofAppEGLWindow") << "createSurface(): error binding API: " << eglErrorString(eglGetError());
-      return false;
-  }else{
-      ofLogNotice("ofAppEGLWindow") << "createSurface(): API bound correctly";
-  }
-
-  // create an EGL rendering eglContext  
-  EGLint attribute_list_surface_context[] = {
-    EGL_CONTEXT_CLIENT_VERSION, glesVersionForContext,
-    EGL_NONE
-  };
-
-    eglContext = eglCreateContext(eglDisplay, 
-                                  eglConfig, 
-                                  EGL_NO_CONTEXT, 
-                                  attribute_list_surface_context);
-
-    if(eglContext == EGL_NO_CONTEXT) {
-       EGLint error = eglGetError();
-       if(error == EGL_BAD_CONFIG) {
-            ofLogError("ofAppEGLWindow") << "createSurface(): error creating context: EGL_BAD_CONFIG " << eglErrorString(error);
-            return false;
-       } else {
-            ofLogError("ofAppEGLWindow") << "createSurface(): error creating context: " << error << " " << eglErrorString(error);
-            return false;
-       }
-    }
-
-    // connect the eglContext to the eglSurface
-    result = eglMakeCurrent(eglDisplay, 
-                            eglSurface, // draw surface
-                            eglSurface, // read surface
-                            eglContext);
-
-    if(eglContext == EGL_FALSE) {
-        EGLint error = eglGetError();
-        ofLogError("ofAppEGLWindow") << "createSurface(): couldn't making current surface: " << eglErrorString(error);
-        return false;
-    }
-
-    // Set background color and clear buffers
-    glClearColor(settings.initialClearColor.r / 255.0f,
-                 settings.initialClearColor.g / 255.0f,
-                 settings.initialClearColor.b / 255.0f,
-                 settings.initialClearColor.a / 255.0f);
-    glClear( GL_COLOR_BUFFER_BIT );
-    glClear( GL_DEPTH_BUFFER_BIT );
-
-    ofLogNotice("ofAppEGLWindow") << "createSurface(): -----EGL-----";
-    ofLogNotice("ofAppEGLWindow") << "createSurface(): EGL_VERSION_MAJOR = " << eglVersionMajor;
-    ofLogNotice("ofAppEGLWindow") << "createSurface(): EGL_VERSION_MINOR = " << eglVersionMinor;
-    ofLogNotice("ofAppEGLWindow") << "createSurface(): EGL_CLIENT_APIS = " << eglQueryString(eglDisplay, EGL_CLIENT_APIS);
-    ofLogNotice("ofAppEGLWindow") << "createSurface(): EGL_VENDOR = "  << eglQueryString(eglDisplay, EGL_VENDOR);
-    ofLogNotice("ofAppEGLWindow") << "createSurface(): EGL_VERSION = " << eglQueryString(eglDisplay, EGL_VERSION);
-    ofLogNotice("ofAppEGLWindow") << "createSurface(): EGL_EXTENSIONS = " << eglQueryString(eglDisplay, EGL_EXTENSIONS);
-    ofLogNotice("ofAppEGLWindow") << "createSurface(): GL_RENDERER = " << glGetString(GL_RENDERER);
-    ofLogNotice("ofAppEGLWindow") << "createSurface(): GL_VERSION  = " << glGetString(GL_VERSION);
-    ofLogNotice("ofAppEGLWindow") << "createSurface(): GL_VENDOR   = " << glGetString(GL_VENDOR);
-    ofLogNotice("ofAppEGLWindow") << "createSurface(): -------------";
-
-    isSurfaceInited = true;
-
-    return true;
-}
-
-//------------------------------------------------------------
-bool ofAppEGLWindow::destroySurface() {
-    if(isSurfaceInited) {
-        ofLogNotice("ofAppEGLWindow") << "destroySurface(): destroying EGL surface";
-        eglSwapBuffers(eglDisplay, eglSurface);
-        eglMakeCurrent(eglDisplay, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
-        eglDestroySurface(eglDisplay, eglSurface);
-        eglDestroyContext(eglDisplay, eglContext);
-        eglTerminate(eglDisplay);
-        isSurfaceInited = false;
-
-        eglDisplay = NULL;
-        eglSurface = NULL;
-        eglContext = NULL;
-        eglConfig  = NULL;
-        eglVersionMinor = -1;
-        eglVersionMinor = -1;
-        
-        return true;
-    } else {
-        ofLogError("ofAppEGLWindow") << "destroySurface(): attempted to destroy uninitialized window";
-        return false;
     }
 }
 
@@ -959,16 +667,6 @@ void ofAppEGLWindow::checkEvents(){
 }
 
 //------------------------------------------------------------
-void ofAppEGLWindow::hideCursor(){
-  bShowCursor = false;
-}
-
-//------------------------------------------------------------
-void ofAppEGLWindow::showCursor(){
-  bShowCursor = true;
-}
-
-//------------------------------------------------------------
 void ofAppEGLWindow::setWindowTitle(string title) {
     ofLogNotice("ofAppEGLWindow") << "setWindowTitle(): not implemented";
 }
@@ -1140,36 +838,6 @@ void ofAppEGLWindow::setWindowShape(int w, int h){
 }
 
 //------------------------------------------------------------
-int ofAppEGLWindow::getWindowMode(){
-  return windowMode;
-}
-
-//------------------------------------------------------------
-void ofAppEGLWindow::toggleFullscreen(){
-  if( windowMode == OF_GAME_MODE) return;
-
-  if( windowMode == OF_WINDOW ){
-    setFullscreen(true);
-  }else{
-    setFullscreen(false);
-  }
-
-}
-
-//------------------------------------------------------------
-void ofAppEGLWindow::setFullscreen(bool fullscreen){
-    if( windowMode == OF_GAME_MODE) return;
-
-    if(fullscreen && windowMode != OF_FULLSCREEN){
-        bNewScreenMode  = true;
-        windowMode      = OF_FULLSCREEN;
-    }else if(!fullscreen && windowMode != OF_WINDOW) {
-        bNewScreenMode  = true;
-        windowMode      = OF_WINDOW;
-    }
-}
-
-//------------------------------------------------------------
 void ofAppEGLWindow::enableSetupScreen(){
   bEnableSetupScreen = true;
 }
@@ -1177,12 +845,6 @@ void ofAppEGLWindow::enableSetupScreen(){
 //------------------------------------------------------------
 void ofAppEGLWindow::disableSetupScreen(){
   bEnableSetupScreen = false;
-}
-
-//------------------------------------------------------------
-void ofAppEGLWindow::idle() {
-  ofNotifyUpdate();
-
 }
 
 //------------------------------------------------------------
@@ -1259,13 +921,13 @@ void ofAppEGLWindow::display() {
     renderer->finishRender();
   }
   
-  EGLBoolean success = eglSwapBuffers(eglDisplay, eglSurface);
+  EGLBoolean success = eglSwapBuffers(getEglDisplay(), getEglSurface());
   if(!success) {
        GLint error = eglGetError();
        ofLogNotice("ofAppEGLWindow") << "display(): eglSwapBuffers failed: " << eglErrorString(error);
   }
 
-  nFramesSinceWindowResized++;
+  nFramesSinceResized++;
 
 }
 
@@ -1273,11 +935,6 @@ void ofAppEGLWindow::display() {
 ofRectangle ofAppEGLWindow::getScreenRect(){
   ofPoint screenSize = getScreenSize();
   return ofRectangle(0,0,screenSize.x,screenSize.y);
-}
-
-//------------------------------------------------------------
-void ofAppEGLWindow::setVerticalSync(bool enabled){
-  eglSwapInterval(eglDisplay, enabled ? 1 : 0);
 }
 
 //------------------------------------------------------------
