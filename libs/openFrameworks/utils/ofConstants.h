@@ -74,6 +74,9 @@ enum ofTargetPlatform{
 	#define TARGET_LINUX
 	#define TARGET_OPENGLES
 	#define TARGET_LINUX_ARM
+#elif defined(EMSCRIPTEN)
+	#define TARGET_EMSCRIPTEN
+	#define TARGET_OPENGLES
 #else
 	#define TARGET_LINUX
 #endif
@@ -222,6 +225,19 @@ enum ofTargetPlatform{
 #else
 	//typedef GLuint ofIndexType;
 #endif
+
+#ifdef TARGET_EMSCRIPTEN
+	#include <unistd.h>
+	#include <GLES2/gl2.h>
+	#include <GLES2/gl2ext.h>
+	#define TARGET_LITTLE_ENDIAN
+
+	#include "EGL/egl.h"
+	#include "EGL/eglext.h"
+
+	#define TARGET_NO_SOUND
+	#define USE_PROGRAMMABLE_GL
+#endif //TARGET_EMSCRIPTEN
 
 #include "tesselator.h"
 typedef TESSindex ofIndexType;
