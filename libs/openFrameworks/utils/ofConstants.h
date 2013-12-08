@@ -240,9 +240,6 @@ enum ofTargetPlatform{
 	#define USE_PROGRAMMABLE_GL
 #endif //TARGET_EMSCRIPTEN
 
-#include "tesselator.h"
-typedef TESSindex ofIndexType;
-
 #ifndef OF_WARN_UNUSED
 #define OF_WARN_UNUSED __attribute__((warn_unused_result))
 #endif

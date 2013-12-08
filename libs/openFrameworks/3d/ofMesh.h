@@ -11,6 +11,9 @@
 #include "ofConstants.h"
 #include "ofGLUtils.h"
 
+#include "tesselator.h"
+typedef TESSindex ofIndexType;
+
 class ofMeshFace;
 
 class ofMesh{
