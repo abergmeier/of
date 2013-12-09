@@ -17,7 +17,7 @@
 		#include <OpenGL/glu.h>
 	#endif
 
-	#ifdef TARGET_OPENGLES
+	#if defined(TARGET_OPENGLES) && !defined(TARGET_EMSCRIPTEN)
 		#include "glu.h"
 	#endif
 
