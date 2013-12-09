@@ -49,7 +49,7 @@
 
 //--------------------------
 // graphics
-#if !defined( TARGET_OF_IOS ) & !defined(TARGET_ANDROID)
+#if !defined( TARGET_OF_IOS ) & !defined(TARGET_ANDROID) & !defined(TARGET_EMSCRIPTEN)  
 #include "ofCairoRenderer.h"
 #endif
 #include "ofGraphics.h"
