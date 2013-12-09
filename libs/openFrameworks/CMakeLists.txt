@@ -17,6 +17,7 @@ set( includes
 	gl
 	graphics
 	math
+	net
 	types
 	utils
 	video
@@ -34,6 +35,7 @@ add_subdirectory( events )
 #add_subdirectory( gl )
 #add_subdirectory( graphics )
 #add_subdirectory( math )
+add_subdirectory( net )
 #add_subdirectory( types )
 add_subdirectory( utils )
 #add_subdirectory( video )
@@ -41,6 +43,7 @@ add_subdirectory( utils )
 add_library( of_core SHARED
 	ofMain.h
 	$<TARGET_OBJECTS:of_events>
+	$<TARGET_OBJECTS:of_net>
 )
 
 target_include_directories( of_core
