@@ -116,7 +116,24 @@ private:
 	friend void ofReloadAllFontTextures();
 #endif
 
-	GLint blend_src, blend_dst;
+	struct {
+#ifdef TARGET_EMSCRIPTEN
+		GLenum rgb;
+		GLenum a;
+#else
+		GLenum rgba;
+#endif
+	} blend_src;
+
+#ifdef TARGET_EMSCRIPTEN
+	struct {
+		GLint rgb;
+		GLint a;
+#else
+		GLenum rgba;
+#endif
+	} blend_dst;
+
 	GLboolean blend_enabled;
 	GLboolean texture_2d_enabled;
 

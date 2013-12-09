@@ -1110,8 +1110,22 @@ void ofTrueTypeFont::bind(){
 
 		blend_enabled = glIsEnabled(GL_BLEND);
 		texture_2d_enabled = glIsEnabled(GL_TEXTURE_2D);
-		glGetIntegerv( GL_BLEND_SRC, &blend_src );
-		glGetIntegerv( GL_BLEND_DST, &blend_dst );
+
+		auto getEnum = []( const GLenum& key ) -> GLenum {
+			auto buffer = int{};
+			glGetIntegerv( key, &buffer );
+			return buffer;
+		};
+
+#ifdef TARGET_EMSCRIPTEN
+		blend_src.rgb = getEnum( GL_BLEND_SRC_RGB   );
+		blend_src.a   = getEnum( GL_BLEND_SRC_ALPHA );
+		blend_dst.rgb = getEnum( GL_BLEND_DST_RGB   );
+		blend_dst.a   = getEnum( GL_BLEND_DST_ALPHA );
+#else
+		blend_src.rgba = getEnum( GL_BLEND_SRC );
+		blend_dst.rgba = getEnum( GL_BLEND_DST );
+#endif // TARGET_EMSCRIPTEN
 
 	    // (b) enable our regular ALPHA blending!
 	    glEnable(GL_BLEND);
@@ -1133,7 +1147,13 @@ void ofTrueTypeFont::unbind(){
 			glDisable(GL_BLEND);
 		if( !texture_2d_enabled )
 			glDisable(GL_TEXTURE_2D);
-		glBlendFunc( blend_src, blend_dst );
+#ifdef TARGET_EMSCRIPTEN
+		glBlendFuncSeparate( blend_src.rgb, blend_dst.rgb,
+		                     blend_src.a  , blend_dst.a
+		);
+#else
+		glBlendFunc( blend_src.rgba, blend_dst.rgba );
+#endif
 
 		binded = false;
 	}
