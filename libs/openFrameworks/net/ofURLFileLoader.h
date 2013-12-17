@@ -54,5 +54,9 @@ void ofStopURLLoader();
 
 ofEvent<ofHttpResponse> & ofURLResponseEvent();
 
+#ifdef TARGET_EMSCRIPTEN
+#include "ofURLFileLoader_EM.hpp"
+#else
 #include "ofURLFileLoader_SYNC.hpp"
+#endif
 
