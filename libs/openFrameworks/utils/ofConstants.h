@@ -369,7 +369,12 @@ typedef ofBaseApp ofSimpleApp;
 #include <fstream>
 #include <algorithm>
 #include <cfloat>
+#include <tr3/future>
 using namespace std;
+
+using std::tr3::future;
+using std::tr3::promise;
+using std::tr3::make_ready_future;
 
 #ifndef PI
 	#define PI       3.14159265358979323846
