@@ -1,0 +1,35 @@
+// -*- C++ -*-
+//===--------------------------- future -----------------------------------===//
+//
+//                     The LLVM Compiler Infrastructure
+//
+// This file is dual licensed under the MIT and the University of Illinois Open
+// Source Licenses. See LICENSE.TXT for details.
+//
+//===----------------------------------------------------------------------===//
+
+#ifndef _TR3_LIBCPP_EXECUTOR
+#define _TR3_LIBCPP_EXECUTOR
+
+#include <tr3/__config>
+
+_LIBCPP_BEGIN_NAMESPACE_TR3
+
+class executor {
+public:
+    virtual ~executor();
+    virtual void add(function<void()> closure) = 0;
+    virtual size_t uninitiated_task_count() const = 0;
+};
+
+class scheduled_executor
+    : public executor {
+protected:
+	scheduled_executor() _NOEXCEPT = default;
+	scheduled_executor( const scheduled_executor& ) _NOEXCEPT = default;
+	scheduled_executor( scheduled_executor&& ) _NOEXCEPT = default;
+};
+
+_LIBCPP_END_NAMESPACE_TR3
+
+#endif //_TR3_LIBCPP_EXECUTOR
