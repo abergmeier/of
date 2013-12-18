@@ -1159,6 +1159,7 @@ public:
         future_status
         wait_until(const std::chrono::time_point<_Clock, _Duration>& __abs_time) const
             {return __state_->wait_until(__abs_time);}
+    bool is_ready() const {return __state_->__is_ready();}
 };
 
 template <class _Rp>
@@ -1263,6 +1264,7 @@ public:
         future_status
         wait_until(const std::chrono::time_point<_Clock, _Duration>& __abs_time) const
             {return __state_->wait_until(__abs_time);}
+    bool is_ready() const {return __state_->__is_ready();}
 };
 
 template <class _Rp>
@@ -1362,6 +1364,7 @@ public:
         future_status
         wait_until(const std::chrono::time_point<_Clock, _Duration>& __abs_time) const
             {return __state_->wait_until(__abs_time);}
+    bool is_ready() const {return __state_->__is_ready();}
 };
 
 template <class _Rp>
@@ -2458,6 +2461,7 @@ public:
         future_status
         wait_until(const std::chrono::time_point<_Clock, _Duration>& __abs_time) const
             {return __state_->wait_until(__abs_time);}
+    bool is_ready() const {return __state_->__is_ready();}
 };
 
 template <class _Rp>
@@ -2532,6 +2536,7 @@ public:
         future_status
         wait_until(const std::chrono::time_point<_Clock, _Duration>& __abs_time) const
             {return __state_->wait_until(__abs_time);}
+    bool is_ready() const {return __state_->__is_ready();}
 };
 
 template <class _Rp>
@@ -2606,6 +2611,7 @@ public:
         future_status
         wait_until(const std::chrono::time_point<_Clock, _Duration>& __abs_time) const
             {return __state_->wait_until(__abs_time);}
+    bool is_ready() const {return __state_->__is_ready();}
 };
 
 template <class _Rp>
