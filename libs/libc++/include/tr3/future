@@ -696,10 +696,17 @@ __assoc_state<_Rp>::set_value_at_thread_exit(_Arg& __arg)
     if (this->__has_value())
         throw future_error(make_error_code(future_errc::promise_already_satisfied));
 #endif
+#ifdef EMSCRIPTEN
+#ifndef _LIBCPP_NO_EXCEPTIONS
+    // TODO: proper error code
+    throw future_error(error_code());
+#endif
+#else
     ::new(&__value_) _Rp(_VSTD::forward<_Arg>(__arg));
     this->__state_ |= base::__constructed;
     __thread_local_data()->__make_ready_at_thread_exit(this);
     __lk.unlock();
+#endif
 }
 
 template <class _Rp>
@@ -774,10 +781,17 @@ __assoc_state<_Rp&>::set_value_at_thread_exit(_Rp& __arg)
     if (this->__has_value())
         throw future_error(make_error_code(future_errc::promise_already_satisfied));
 #endif
+#ifdef EMSCRIPTEN
+#ifndef _LIBCPP_NO_EXCEPTIONS
+    //TODO: proper error code
+    throw future_error(error_code());
+#endif
+#else
     __value_ = _VSTD::addressof(__arg);
     this->__state_ |= base::__constructed;
     __thread_local_data()->__make_ready_at_thread_exit(this);
     __lk.unlock();
+#endif
 }
 
 template <class _Rp>
@@ -1526,7 +1540,14 @@ promise<_Rp>::set_value_at_thread_exit(const _Rp& __r)
     if (__state_ == nullptr)
         throw future_error(make_error_code(future_errc::no_state));
 #endif
+#ifdef EMSCRIPTEN
+#ifndef _LIBCPP_NO_EXCEPTIONS
+    //TODO: proper error
+    throw future_error(error_code());
+#endif
+#else
     __state_->set_value_at_thread_exit(__r);
+#endif
 }
 
 #ifndef _LIBCPP_HAS_NO_RVALUE_REFERENCES
@@ -1539,7 +1560,14 @@ promise<_Rp>::set_value_at_thread_exit(_Rp&& __r)
     if (__state_ == nullptr)
         throw future_error(make_error_code(future_errc::no_state));
 #endif
+#ifdef EMSCRIPTEN
+#ifndef _LIBCPP_NO_EXCEPTIONS
+    // TODO: proper error
+    throw future_error(error_code());
+#endif
+#else
     __state_->set_value_at_thread_exit(_VSTD::move(__r));
+#endif
 }
 
 #endif  // _LIBCPP_HAS_NO_RVALUE_REFERENCES
@@ -1552,7 +1580,14 @@ promise<_Rp>::set_exception_at_thread_exit(exception_ptr __p)
     if (__state_ == nullptr)
         throw future_error(make_error_code(future_errc::no_state));
 #endif
+#ifdef EMSCRIPTEN
+#ifndef _LIBCPP_NO_EXCEPTIONS
+    //TODO: proper error
+    throw future_error(error_code());
+#endif
+#else
     __state_->set_exception_at_thread_exit(__p);
+#endif
 }
 
 // promise<R&>
@@ -1684,7 +1719,14 @@ promise<_Rp&>::set_value_at_thread_exit(_Rp& __r)
     if (__state_ == nullptr)
         throw future_error(make_error_code(future_errc::no_state));
 #endif
+#ifdef EMSCRIPTEN
+#ifndef _LIBCPP_NO_EXCEPTIONS
+    //TODO: proper error
+    throw future_error(error_code());
+#endif
+#else
     __state_->set_value_at_thread_exit(__r);
+#endif
 }
 
 template <class _Rp>
@@ -1695,7 +1737,14 @@ promise<_Rp&>::set_exception_at_thread_exit(exception_ptr __p)
     if (__state_ == nullptr)
         throw future_error(make_error_code(future_errc::no_state));
 #endif
+#ifdef EMSCRIPTEN
+#ifndef _LIBCPP_NO_EXCEPTIONS
+    // TODO: proper error
+    throw future_error(error_code());
+#endif
+#else
     __state_->set_exception_at_thread_exit(__p);
+#endif
 }
 
 // promise<void>
@@ -2138,6 +2187,14 @@ void
 packaged_task<_Rp(_ArgTypes...)>::make_ready_at_thread_exit(_ArgTypes... __args)
 {
     using namespace std;
+#ifdef EMSCRIPTEN
+#ifdef _LIBCPP_NO_EXCEPTIONS
+    return;
+#else
+    //TODO: proper error
+    throw future_error(error_code());
+#endif
+#endif
 #ifndef _LIBCPP_NO_EXCEPTIONS
     if (__p_.__state_ == nullptr)
         throw future_error(make_error_code(future_errc::no_state));
@@ -2272,6 +2329,14 @@ void
 packaged_task<void(_ArgTypes...)>::make_ready_at_thread_exit(_ArgTypes... __args)
 {
     using namespace std;
+#ifdef EMSCRIPTEN
+#ifdef _LIBCPP_NO_EXCEPTIONS
+    return;
+#else
+    //TODO: proper error
+    throw future_error(error_code());
+#endif
+#endif
 #ifndef _LIBCPP_NO_EXCEPTIONS
     if (__p_.__state_ == nullptr)
         throw future_error(make_error_code(future_errc::no_state));
