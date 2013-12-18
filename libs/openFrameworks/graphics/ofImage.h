@@ -56,16 +56,16 @@ enum ofImageFormat {
 
 //----------------------------------------------------
 // FreeImage based stuff:
-bool ofLoadImage(ofPixels & pix, string path);
+future<bool> ofLoadImage(ofPixels & pix, string path) OF_WARN_UNUSED;
 bool ofLoadImage(ofPixels & pix, const ofBuffer & buffer);
 
-bool ofLoadImage(ofFloatPixels & pix, string path);
+future<bool> ofLoadImage(ofFloatPixels & pix, string path) OF_WARN_UNUSED;
 bool ofLoadImage(ofFloatPixels & pix, const ofBuffer & buffer);
 
-bool ofLoadImage(ofShortPixels & pix, string path);
+future<bool> ofLoadImage(ofShortPixels & pix, string path) OF_WARN_UNUSED;
 bool ofLoadImage(ofShortPixels & pix, const ofBuffer & buffer);
 
-bool ofLoadImage(ofTexture & tex, string path);
+future<bool> ofLoadImage(ofTexture & tex, string path) OF_WARN_UNUSED;
 bool ofLoadImage(ofTexture & tex, const ofBuffer & buffer);
 
 void ofSaveImage(ofPixels & pix, string path, ofImageQualityType qualityLevel = OF_IMAGE_QUALITY_BEST);
@@ -91,7 +91,7 @@ class ofImage_ : public ofBaseImage_<PixelType>{
 
 		ofImage_(const ofPixels_<PixelType> & pix);
 		ofImage_(const ofFile & file);
-		ofImage_(const string & filename);
+		static future<ofImage_<PixelType>> create( const string& filename ) OF_WARN_UNUSED;
 
 		// allocation / deallocation routines
 		void 				allocate(int w, int h, ofImageType type);
@@ -123,9 +123,9 @@ class ofImage_ : public ofBaseImage_<PixelType>{
 		void unbind();
 
 		// file loading / saving
-		bool 				loadImage(string fileName);
+		future<bool>		loadImage(string fileName) OF_WARN_UNUSED;
 		bool				loadImage(const ofBuffer & buffer);
-		bool 				loadImage(const ofFile & file);
+		bool				loadImage(const ofFile & file);
 		void 				saveImage(string fileName, ofImageQualityType compressionLevel = OF_IMAGE_QUALITY_BEST);
 		void 				saveImage(ofBuffer & buffer, ofImageQualityType compressionLevel = OF_IMAGE_QUALITY_BEST);
 		void 				saveImage(const ofFile & file, ofImageQualityType compressionLevel = OF_IMAGE_QUALITY_BEST);

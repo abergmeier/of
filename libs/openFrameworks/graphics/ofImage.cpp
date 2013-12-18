@@ -180,43 +180,58 @@ void putBmpIntoPixels(FIBITMAP * bmp, ofPixels_<PixelType> &pix, bool swapForLit
 #endif
 }
 
-template<typename PixelType>
-static bool loadImage(ofPixels_<PixelType> & pix, string fileName){
-	if(fileName.substr(0, 7) == "http://") {
-		return ofLoadImage(pix, ofLoadURL(fileName).data);
-	}
-	
-	ofInitFreeImage();
+namespace {
 
-	fileName = ofToDataPath(fileName);
-	bool bLoaded = false;
-	FIBITMAP * bmp = NULL;
+	template<typename PixelType>
+	bool
+	loadImageLocal( ofPixels_<PixelType> & pix, string fileName ) {
+		ofInitFreeImage();
 
-	FREE_IMAGE_FORMAT fif = FIF_UNKNOWN;
-	fif = FreeImage_GetFileType(fileName.c_str(), 0);
-	if(fif == FIF_UNKNOWN) {
-		// or guess via filename
-		fif = FreeImage_GetFIFFromFilename(fileName.c_str());
-	}
-	if((fif != FIF_UNKNOWN) && FreeImage_FIFSupportsReading(fif)) {
-		bmp = FreeImage_Load(fif, fileName.c_str(), 0);
+		fileName = ofToDataPath(fileName);
+		bool bLoaded = false;
+		FIBITMAP * bmp = NULL;
+
+		FREE_IMAGE_FORMAT fif = FIF_UNKNOWN;
+		fif = FreeImage_GetFileType(fileName.c_str(), 0);
+		if(fif == FIF_UNKNOWN) {
+			// or guess via filename
+			fif = FreeImage_GetFIFFromFilename(fileName.c_str());
+		}
+		if((fif != FIF_UNKNOWN) && FreeImage_FIFSupportsReading(fif)) {
+			bmp = FreeImage_Load(fif, fileName.c_str(), 0);
+
+			if (bmp != NULL){
+				bLoaded = true;
+			}
+		}
+
+		//-----------------------------
+
+		if ( bLoaded ){
+			putBmpIntoPixels(bmp,pix);
+		}
 
 		if (bmp != NULL){
-			bLoaded = true;
+			FreeImage_Unload(bmp);
 		}
-	}
-	
-	//-----------------------------
 
-	if ( bLoaded ){
-		putBmpIntoPixels(bmp,pix);
+		return bLoaded;
 	}
+}
 
-	if (bmp != NULL){
-		FreeImage_Unload(bmp);
+template<typename PixelType>
+static future<bool>
+loadImage( ofPixels_<PixelType> & pix, string fileName ){
+
+	if(fileName.substr(0, 7) == "http://") {
+		return ofLoadURL(fileName)
+			.then( [&pix]( future<ofHttpResponse> response ) {
+				auto data = response.get().data;
+				return ofLoadImage(pix, data);
+			} );
 	}
-
-	return bLoaded;
+		
+	return make_ready_future( loadImageLocal(pix, fileName) );
 }
 
 template<typename PixelType>
@@ -267,7 +282,8 @@ static bool loadImage(ofPixels_<PixelType> & pix, const ofBuffer & buffer){
 
 
 //----------------------------------------------------
-bool ofLoadImage(ofPixels & pix, string fileName) {
+future<bool>
+ofLoadImage( ofPixels & pix, string fileName ) {
 	return loadImage(pix,fileName);
 }
 
@@ -277,7 +293,8 @@ bool ofLoadImage(ofPixels & pix, const ofBuffer & buffer) {
 }
 
 //----------------------------------------------------
-bool ofLoadImage(ofFloatPixels & pix, string path){
+future<bool>
+ofLoadImage( ofFloatPixels & pix, string path ){
 	return loadImage(pix,path);
 }
 
@@ -287,7 +304,8 @@ bool ofLoadImage(ofFloatPixels & pix, const ofBuffer & buffer){
 }
 
 //----------------------------------------------------
-bool ofLoadImage(ofShortPixels & pix, string path){
+future<bool>
+ofLoadImage(ofShortPixels & pix, string path){
 	return loadImage(pix,path);
 }
 
@@ -298,14 +316,19 @@ bool ofLoadImage(ofShortPixels & pix, const ofBuffer & buffer){
 
 
 //----------------------------------------------------------------
-bool ofLoadImage(ofTexture & tex, string path){
-	ofPixels pixels;
-	bool loaded = ofLoadImage(pixels,path);
-	if(loaded){
+future<bool>
+ofLoadImage(ofTexture & tex, string path){
+	auto shared_pixels = make_shared<ofPixels>();
+	auto loaded = ofLoadImage(*shared_pixels,path);
+	return loaded.then( [&tex,shared_pixels]( future<bool> result ) {
+		if( !result.get() )
+			return false;
+
+		auto& pixels = *shared_pixels;
 		tex.allocate(pixels.getWidth(), pixels.getHeight(), ofGetGlInternalFormat(pixels));
 		tex.loadData(pixels);
-	}
-	return loaded;
+		return true;
+	} );
 }
 
 //----------------------------------------------------------------
@@ -565,18 +588,15 @@ ofImage_<PixelType>::ofImage_(const ofFile & file){
 }
 
 template<typename PixelType>
-ofImage_<PixelType>::ofImage_(const string & filename){
-	width						= 0;
-	height						= 0;
-	bpp							= 0;
-	type						= OF_IMAGE_UNDEFINED;
-	bUseTexture					= true;		// the default is, yes, use a texture
+future<ofImage_<PixelType>>
+ofImage_<PixelType>::create( const string & filename ) {
+	auto shared_image = make_shared<ofImage_<PixelType>>();
 
-	//----------------------- init free image if necessary
-	ofInitFreeImage();
-
-
-	loadImage(filename);
+	// Bad workaround till C++14
+	return shared_image->loadImage(filename).then( [shared_image](future<bool> result) {
+		result.get();
+		return std::move(*shared_image);
+	} );
 }
 
 //----------------------------------------------------------
@@ -618,16 +638,11 @@ void ofImage_<PixelType>::reloadTexture(){
 //----------------------------------------------------------
 template<typename PixelType>
 bool ofImage_<PixelType>::loadImage(const ofFile & file){
-	return loadImage(file.getAbsolutePath());
-}
-
-//----------------------------------------------------------
-template<typename PixelType>
-bool ofImage_<PixelType>::loadImage(string fileName){
 #if defined(TARGET_ANDROID) || defined(TARGET_OF_IOS)
 	registerImage(this);
 #endif
-	bool bLoadedOk = ofLoadImage(pixels, fileName);
+	const auto fileName = file.getAbsolutePath();
+	auto bLoadedOk = loadImageLocal(pixels, fileName);
 	if (!bLoadedOk) {
 		ofLogError("ofImage") << "loadImage(): couldn't load image from \"" << fileName << "\"";
 		clear();
@@ -641,6 +656,32 @@ bool ofImage_<PixelType>::loadImage(string fileName){
 	}
 	update();
 	return bLoadedOk;
+}
+
+//----------------------------------------------------------
+template<typename PixelType>
+future<bool>
+ofImage_<PixelType>::loadImage(string fileName){
+#if defined(TARGET_ANDROID) || defined(TARGET_OF_IOS)
+	registerImage(this);
+#endif
+	auto load = ofLoadImage(pixels, fileName);
+	return load.then( [this,fileName]( future<bool> result ) {
+		auto bLoadedOk = result.get();
+		if (!bLoadedOk) {
+			ofLogError("ofImage") << "loadImage(): couldn't load image from \"" << fileName << "\"";
+			clear();
+			return false;
+		}
+		if (bLoadedOk && pixels.isAllocated() && bUseTexture){
+			tex.allocate(pixels.getWidth(), pixels.getHeight(), ofGetGlInternalFormat(pixels));
+			if(ofGetGLProgrammableRenderer() && (pixels.getNumChannels()==1 || pixels.getNumChannels()==2)){
+				tex.setRGToRGBASwizzles(true);
+			}
+		}
+		update();
+		return bLoadedOk;
+	} );
 }
 
 template<typename PixelType>
