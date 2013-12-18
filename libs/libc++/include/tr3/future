@@ -2649,6 +2649,18 @@ future<void>::share()
 
 #endif  // _LIBCPP_HAS_NO_RVALUE_REFERENCES
 
+template <typename T>
+future<typename decay<T>::type>
+make_ready_future(T&& value)
+{
+    promise<typename decay<T>::type> p;
+    p.set_value(std::forward<T>(value));
+    return p.get_future();
+}
+
+future<void>
+make_ready_future();
+
 _LIBCPP_END_NAMESPACE_TR3
 
 #endif  // _TR3_LIBCPP_FUTURE
