@@ -10,5 +10,16 @@ make_ready_future()
     return p.get_future();
 }
 
+void
+__assoc_sub_state::set_continuation(unique_ptr<__sub_cont> __con)
+{
+    __continuation_ = std::move(__con);
+}
+
+void
+__sub_cont::__on_zero_shared() _NOEXCEPT
+{
+    delete this;
+}
 
 

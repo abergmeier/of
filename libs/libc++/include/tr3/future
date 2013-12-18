@@ -537,6 +537,15 @@ public:
     virtual ~future_error() _NOEXCEPT;
 };
 
+class __sub_cont
+    : public __shared_count
+{
+public:
+    virtual void operator()() = 0;
+protected:
+    void __on_zero_shared() _NOEXCEPT override;
+};
+
 class _LIBCPP_TYPE_VIS __assoc_sub_state
     : public __shared_count
 {
@@ -545,6 +554,7 @@ protected:
     mutable mutex __mut_;
     mutable condition_variable __cv_;
     unsigned __state_;
+    unique_ptr<__sub_cont> __continuation_;
 
     virtual void __on_zero_shared() _NOEXCEPT;
     void __sub_wait(unique_lock<mutex>& __lk);
@@ -585,6 +595,8 @@ public:
 
     void set_exception(exception_ptr __p);
     void set_exception_at_thread_exit(exception_ptr __p);
+
+    void set_continuation(unique_ptr<__sub_cont>);
 
     void copy();
 
@@ -650,6 +662,7 @@ public:
 
     _Rp move();
     typename add_lvalue_reference<_Rp>::type copy();
+    void set_continuation(unique_ptr<__sub_cont>);
 };
 
 template <class _Rp>
@@ -677,8 +690,13 @@ __assoc_state<_Rp>::set_value(_Arg& __arg)
 #endif
     ::new(&__value_) _Rp(_VSTD::forward<_Arg>(__arg));
     this->__state_ |= base::__constructed | base::ready;
+    decltype(__continuation_) continuation;
+    std::swap(continuation, __continuation_);
     __lk.unlock();
-    __cv_.notify_all();
+    if(continuation)
+       (*continuation)();
+    else
+       __cv_.notify_all();
 }
 
 template <class _Rp>
@@ -767,8 +785,13 @@ __assoc_state<_Rp&>::set_value(_Rp& __arg)
 #endif
     __value_ = _VSTD::addressof(__arg);
     this->__state_ |= base::__constructed | base::ready;
+    decltype(__continuation_) continuation;
+    swap(continuation, __continuation_);
     __lk.unlock();
-    __cv_.notify_all();
+    if(continuation)
+        (*continuation)();
+    else
+        __cv_.notify_all();
 }
 
 template <class _Rp>
@@ -1089,6 +1112,74 @@ template <class _Rp> class _LIBCPP_TYPE_VIS_ONLY shared_future;
 
 template <class _Rp> class _LIBCPP_TYPE_VIS_ONLY future;
 
+template <class _F, class _Ret, class _Rp>
+class __cont
+    : public __sub_cont
+{
+    _F __func_;
+    __assoc_state<_Ret>& __state_;
+    future<_Rp> __future_;
+public:
+    __cont(_F&& func,__assoc_state<_Ret>& state,future<_Rp>&& future) :
+        __func_(std::forward<_F>(func)),
+        __state_(state),
+        __future_(std::move(future))
+    {}
+
+    ~__cont()
+    {
+        __state_.__release_shared();
+    }
+
+    void operator()() override
+    {
+
+        try
+        {
+            __state_.set_value(__func_(std::move(__future_)));
+        }
+        catch( ... )
+        {
+            __state_.set_exception(current_exception());
+            return;
+        }
+    }
+};
+
+template <class _F, class _Rp>
+class __cont<_F, void, _Rp>
+    : public __sub_cont
+{
+    _F __func_;
+    __assoc_state<void>& __state_;
+    future<_Rp> __future_;
+public:
+    __cont(_F&& func,__assoc_state<void>& state,future<_Rp>&& future) :
+        __func_(std::forward<_F>(func)),
+        __state_(state),
+        __future_(std::move(future))
+    {}
+
+    ~__cont()
+    {
+        __state_.__release_shared();
+    }
+
+    void operator()() override
+    {
+        try
+        {
+            __func_(std::move(__future_));
+        }
+        catch( ... )
+        {
+            __state_.set_exception(current_exception());
+            return;
+        }
+        __state_.set_value();
+    }
+};
+
 template <class _Rp, class _Fp>
 future<_Rp>
 #ifndef _LIBCPP_HAS_NO_RVALUE_REFERENCES
@@ -1114,6 +1205,7 @@ class _LIBCPP_TYPE_VIS_ONLY future
 
     template <class> friend class promise;
     template <class> friend class shared_future;
+    template <class> friend class future;
 
 #ifndef _LIBCPP_HAS_NO_RVALUE_REFERENCES
     template <class _R1, class _Fp>
@@ -1174,6 +1266,19 @@ public:
         wait_until(const std::chrono::time_point<_Clock, _Duration>& __abs_time) const
             {return __state_->wait_until(__abs_time);}
     bool is_ready() const {return __state_->__is_ready();}
+    template <class _F>
+    auto then(_F&& func) -> future<decltype(func(std::move(*this)))>
+    {
+        typedef decltype(func(std::move(*this))) return_type;
+
+        auto __chain_state = new __assoc_state<return_type>();
+        future<return_type> chained(__chain_state);
+
+        auto c = make_unique<__cont<_F,return_type,_Rp>>(std::forward<_F>(func),*__chain_state,std::move(*this));
+        __state_->set_continuation(std::move(c));
+
+        return chained;
+    }
 };
 
 template <class _Rp>
@@ -1279,6 +1384,19 @@ public:
         wait_until(const std::chrono::time_point<_Clock, _Duration>& __abs_time) const
             {return __state_->wait_until(__abs_time);}
     bool is_ready() const {return __state_->__is_ready();}
+    template <class _F>
+    auto then(_F&& func) -> future<decltype(func(std::move(*this)))>
+    {
+        typedef decltype(func(std::move(*this))) return_type;
+
+        auto __chain_state = new __assoc_state<return_type>();
+        future<return_type> chained(__chain_state);
+
+        auto c = make_unique<__cont<_F,return_type,_Rp&>>(std::forward<_F>(func),*__chain_state,std::move(*this));
+        __state_->set_continuation(std::move(c));
+
+        return chained;
+    }
 };
 
 template <class _Rp>
@@ -1379,6 +1497,19 @@ public:
         wait_until(const std::chrono::time_point<_Clock, _Duration>& __abs_time) const
             {return __state_->wait_until(__abs_time);}
     bool is_ready() const {return __state_->__is_ready();}
+    template <class F>
+    auto then(F&& func) -> future<decltype(func(std::move(*this)))>
+    {
+        typedef decltype(func(std::move(*this))) return_type;
+
+        auto __chain_state = new __assoc_state<return_type>();
+        future<return_type> chained(__chain_state);
+
+        auto c = make_unique<__cont<F,return_type,void>>(std::forward<F>(func),*__chain_state,std::move(*this));
+        __state_->set_continuation(std::move(c));
+
+        return chained;
+    }
 };
 
 template <class _Rp>
