@@ -369,12 +369,50 @@ template <class R, class Alloc> struct uses_allocator<packaged_task<R>, Alloc>;
 #include <exception>
 #include <mutex>
 #include <thread>
-
-#if !defined(_LIBCPP_HAS_NO_PRAGMA_SYSTEM_HEADER)
-#pragma GCC system_header
-#endif
+#include <future>
 
 _LIBCPP_BEGIN_NAMESPACE_STD
+
+using std::mutex;
+using std::condition_variable;
+using std::__shared_count;
+using std::error_code;
+using std::logic_error;
+using std::error_condition;
+using std::error_category;
+using std::exception_ptr;
+using std::allocator_arg_t;
+using std::nullptr_t;
+using std::size_t;
+using std::current_exception;
+using std::unique_lock;
+using std::lock_guard;
+using std::add_lvalue_reference;
+using std::alignment_of;
+using std::__allocator_destructor;
+using std::lock_guard;
+using std::underlying_type;
+using std::remove_reference;
+using std::allocator;
+using std::decay;
+using std::allocator_traits;
+using std::numeric_limits;
+using std::__compressed_pair;
+using std::is_same;
+using std::unique_ptr;
+//using std::__invoke_of;
+//using std::tuple;
+using std::function;
+using std::aligned_storage;
+//using std::__tuple_indices;
+
+template <class T, class... Args>
+unique_ptr<T>
+make_unique(Args&&... args)
+{
+	return unique_ptr<T>(new T(std::forward<Args>(args)...));
+}
+
 
 //enum class future_errc
 _LIBCPP_DECLARE_STRONG_ENUM(future_errc)
@@ -384,15 +422,6 @@ _LIBCPP_DECLARE_STRONG_ENUM(future_errc)
     no_state,
     broken_promise
 };
-_LIBCPP_DECLARE_STRONG_ENUM_EPILOG(future_errc)
-
-template <>
-struct _LIBCPP_TYPE_VIS_ONLY is_error_code_enum<future_errc> : public true_type {};
-
-#ifdef _LIBCPP_HAS_NO_STRONG_ENUMS
-template <>
-struct _LIBCPP_TYPE_VIS_ONLY is_error_code_enum<future_errc::__lx> : public true_type { };
-#endif
 
 //enum class launch
 _LIBCPP_DECLARE_STRONG_ENUM(launch)
@@ -562,17 +591,17 @@ public:
     void wait();
     template <class _Rep, class _Period>
         future_status
-        wait_for(const chrono::duration<_Rep, _Period>& __rel_time) const;
+        wait_for(const std::chrono::duration<_Rep, _Period>& __rel_time) const;
     template <class _Clock, class _Duration>
         future_status
-        wait_until(const chrono::time_point<_Clock, _Duration>& __abs_time) const;
+        wait_until(const std::chrono::time_point<_Clock, _Duration>& __abs_time) const;
 
     virtual void __execute();
 };
 
 template <class _Clock, class _Duration>
 future_status
-__assoc_sub_state::wait_until(const chrono::time_point<_Clock, _Duration>& __abs_time) const
+__assoc_sub_state::wait_until(const std::chrono::time_point<_Clock, _Duration>& __abs_time) const
 {
     unique_lock<mutex> __lk(__mut_);
     if (__state_ & deferred)
@@ -587,9 +616,10 @@ __assoc_sub_state::wait_until(const chrono::time_point<_Clock, _Duration>& __abs
 template <class _Rep, class _Period>
 inline _LIBCPP_INLINE_VISIBILITY
 future_status
-__assoc_sub_state::wait_for(const chrono::duration<_Rep, _Period>& __rel_time) const
+__assoc_sub_state::wait_for(const std::chrono::duration<_Rep, _Period>& __rel_time) const
 {
-    return wait_until(chrono::steady_clock::now() + __rel_time);
+    using namespace std;
+    return wait_until(std::chrono::steady_clock::now() + __rel_time);
 }
 
 template <class _Rp>
@@ -660,6 +690,7 @@ __assoc_state<_Rp>::set_value_at_thread_exit(_Arg&& __arg)
 __assoc_state<_Rp>::set_value_at_thread_exit(_Arg& __arg)
 #endif
 {
+    using namespace std;
     unique_lock<mutex> __lk(this->__mut_);
 #ifndef _LIBCPP_NO_EXCEPTIONS
     if (this->__has_value())
@@ -737,6 +768,7 @@ template <class _Rp>
 void
 __assoc_state<_Rp&>::set_value_at_thread_exit(_Rp& __arg)
 {
+    using namespace std;
     unique_lock<mutex> __lk(this->__mut_);
 #ifndef _LIBCPP_NO_EXCEPTIONS
     if (this->__has_value())
@@ -862,6 +894,7 @@ template <class _Rp, class _Fp>
 void
 __deferred_assoc_state<_Rp, _Fp>::__execute()
 {
+    using namespace std;
 #ifndef _LIBCPP_NO_EXCEPTIONS
     try
     {
@@ -908,6 +941,7 @@ template <class _Fp>
 void
 __deferred_assoc_state<void, _Fp>::__execute()
 {
+    using namespace std;
 #ifndef _LIBCPP_NO_EXCEPTIONS
     try
     {
@@ -955,6 +989,7 @@ template <class _Rp, class _Fp>
 void
 __async_assoc_state<_Rp, _Fp>::__execute()
 {
+    using namespace std;
 #ifndef _LIBCPP_NO_EXCEPTIONS
     try
     {
@@ -1009,6 +1044,7 @@ template <class _Fp>
 void
 __async_assoc_state<void, _Fp>::__execute()
 {
+    using namespace std;
 #ifndef _LIBCPP_NO_EXCEPTIONS
     try
     {
@@ -1116,12 +1152,12 @@ public:
     template <class _Rep, class _Period>
         _LIBCPP_INLINE_VISIBILITY
         future_status
-        wait_for(const chrono::duration<_Rep, _Period>& __rel_time) const
+        wait_for(const std::chrono::duration<_Rep, _Period>& __rel_time) const
             {return __state_->wait_for(__rel_time);}
     template <class _Clock, class _Duration>
         _LIBCPP_INLINE_VISIBILITY
         future_status
-        wait_until(const chrono::time_point<_Clock, _Duration>& __abs_time) const
+        wait_until(const std::chrono::time_point<_Clock, _Duration>& __abs_time) const
             {return __state_->wait_until(__abs_time);}
 };
 
@@ -1220,12 +1256,12 @@ public:
     template <class _Rep, class _Period>
         _LIBCPP_INLINE_VISIBILITY
         future_status
-        wait_for(const chrono::duration<_Rep, _Period>& __rel_time) const
+        wait_for(const std::chrono::duration<_Rep, _Period>& __rel_time) const
             {return __state_->wait_for(__rel_time);}
     template <class _Clock, class _Duration>
         _LIBCPP_INLINE_VISIBILITY
         future_status
-        wait_until(const chrono::time_point<_Clock, _Duration>& __abs_time) const
+        wait_until(const std::chrono::time_point<_Clock, _Duration>& __abs_time) const
             {return __state_->wait_until(__abs_time);}
 };
 
@@ -1319,12 +1355,12 @@ public:
     template <class _Rep, class _Period>
         _LIBCPP_INLINE_VISIBILITY
         future_status
-        wait_for(const chrono::duration<_Rep, _Period>& __rel_time) const
+        wait_for(const std::chrono::duration<_Rep, _Period>& __rel_time) const
             {return __state_->wait_for(__rel_time);}
     template <class _Clock, class _Duration>
         _LIBCPP_INLINE_VISIBILITY
         future_status
-        wait_until(const chrono::time_point<_Clock, _Duration>& __abs_time) const
+        wait_until(const std::chrono::time_point<_Clock, _Duration>& __abs_time) const
             {return __state_->wait_until(__abs_time);}
 };
 
@@ -1735,10 +1771,6 @@ swap(promise<_Rp>& __x, promise<_Rp>& __y) _NOEXCEPT
     __x.swap(__y);
 }
 
-template <class _Rp, class _Alloc>
-    struct _LIBCPP_TYPE_VIS_ONLY uses_allocator<promise<_Rp>, _Alloc>
-        : public true_type {};
-
 #ifndef _LIBCPP_HAS_NO_VARIADICS
 
 // packaged_task
@@ -2014,7 +2046,7 @@ public:
     _LIBCPP_INLINE_VISIBILITY
     packaged_task() _NOEXCEPT : __p_(nullptr) {}
     template <class _Fp,
-              class = typename enable_if
+              class = typename std::enable_if
               <
                   !is_same<
                       typename decay<_Fp>::type, 
@@ -2025,7 +2057,7 @@ public:
         _LIBCPP_INLINE_VISIBILITY
         explicit packaged_task(_Fp&& __f) : __f_(_VSTD::forward<_Fp>(__f)) {}
     template <class _Fp, class _Allocator,
-              class = typename enable_if
+              class = typename std::enable_if
               <
                   !is_same<
                       typename decay<_Fp>::type, 
@@ -2035,8 +2067,8 @@ public:
               >
         _LIBCPP_INLINE_VISIBILITY
         explicit packaged_task(allocator_arg_t, const _Allocator& __a, _Fp&& __f)
-             : __f_(allocator_arg, __a, _VSTD::forward<_Fp>(__f)),
-               __p_(allocator_arg, __a) {}
+             : __f_(std::allocator_arg, __a, _VSTD::forward<_Fp>(__f)),
+               __p_(std::allocator_arg, __a) {}
     // ~packaged_task() = default;
 
     // no copy
@@ -2079,6 +2111,7 @@ template<class _Rp, class ..._ArgTypes>
 void
 packaged_task<_Rp(_ArgTypes...)>::operator()(_ArgTypes... __args)
 {
+    using namespace std;
 #ifndef _LIBCPP_NO_EXCEPTIONS
     if (__p_.__state_ == nullptr)
         throw future_error(make_error_code(future_errc::no_state));
@@ -2101,6 +2134,7 @@ template<class _Rp, class ..._ArgTypes>
 void
 packaged_task<_Rp(_ArgTypes...)>::make_ready_at_thread_exit(_ArgTypes... __args)
 {
+    using namespace std;
 #ifndef _LIBCPP_NO_EXCEPTIONS
     if (__p_.__state_ == nullptr)
         throw future_error(make_error_code(future_errc::no_state));
@@ -2145,7 +2179,7 @@ public:
     _LIBCPP_INLINE_VISIBILITY
     packaged_task() _NOEXCEPT : __p_(nullptr) {}
     template <class _Fp,
-              class = typename enable_if
+              class = typename std::enable_if
               <
                   !is_same<
                       typename decay<_Fp>::type, 
@@ -2156,7 +2190,7 @@ public:
         _LIBCPP_INLINE_VISIBILITY
         explicit packaged_task(_Fp&& __f) : __f_(_VSTD::forward<_Fp>(__f)) {}
     template <class _Fp, class _Allocator,
-              class = typename enable_if
+              class = typename std::enable_if
               <
                   !is_same<
                       typename decay<_Fp>::type, 
@@ -2166,8 +2200,8 @@ public:
               >    
         _LIBCPP_INLINE_VISIBILITY
         explicit packaged_task(allocator_arg_t, const _Allocator& __a, _Fp&& __f)
-             : __f_(allocator_arg, __a, _VSTD::forward<_Fp>(__f)),
-               __p_(allocator_arg, __a) {}
+             : __f_(std::allocator_arg, __a, _VSTD::forward<_Fp>(__f)),
+               __p_(std::allocator_arg, __a) {}
     // ~packaged_task() = default;
 
     // no copy
@@ -2210,6 +2244,7 @@ template<class ..._ArgTypes>
 void
 packaged_task<void(_ArgTypes...)>::operator()(_ArgTypes... __args)
 {
+    using namespace std;
 #ifndef _LIBCPP_NO_EXCEPTIONS
     if (__p_.__state_ == nullptr)
         throw future_error(make_error_code(future_errc::no_state));
@@ -2233,6 +2268,7 @@ template<class ..._ArgTypes>
 void
 packaged_task<void(_ArgTypes...)>::make_ready_at_thread_exit(_ArgTypes... __args)
 {
+    using namespace std;
 #ifndef _LIBCPP_NO_EXCEPTIONS
     if (__p_.__state_ == nullptr)
         throw future_error(make_error_code(future_errc::no_state));
@@ -2270,10 +2306,6 @@ swap(packaged_task<_Callable>& __x, packaged_task<_Callable>& __y) _NOEXCEPT
 {
     __x.swap(__y);
 }
-
-template <class _Callable, class _Alloc>
-struct _LIBCPP_TYPE_VIS_ONLY uses_allocator<packaged_task<_Callable>, _Alloc>
-    : public true_type {};
 
 template <class _Rp, class _Fp>
 future<_Rp>
@@ -2319,6 +2351,7 @@ public:
 
     _Rp operator()()
     {
+        using namespace std;
         typedef typename __make_tuple_indices<1+sizeof...(_Args), 1>::type _Index;
         return __execute(_Index());
     }
@@ -2418,12 +2451,12 @@ public:
     template <class _Rep, class _Period>
         _LIBCPP_INLINE_VISIBILITY
         future_status
-        wait_for(const chrono::duration<_Rep, _Period>& __rel_time) const
+        wait_for(const std::chrono::duration<_Rep, _Period>& __rel_time) const
             {return __state_->wait_for(__rel_time);}
     template <class _Clock, class _Duration>
         _LIBCPP_INLINE_VISIBILITY
         future_status
-        wait_until(const chrono::time_point<_Clock, _Duration>& __abs_time) const
+        wait_until(const std::chrono::time_point<_Clock, _Duration>& __abs_time) const
             {return __state_->wait_until(__abs_time);}
 };
 
@@ -2492,12 +2525,12 @@ public:
     template <class _Rep, class _Period>
         _LIBCPP_INLINE_VISIBILITY
         future_status
-        wait_for(const chrono::duration<_Rep, _Period>& __rel_time) const
+        wait_for(const std::chrono::duration<_Rep, _Period>& __rel_time) const
             {return __state_->wait_for(__rel_time);}
     template <class _Clock, class _Duration>
         _LIBCPP_INLINE_VISIBILITY
         future_status
-        wait_until(const chrono::time_point<_Clock, _Duration>& __abs_time) const
+        wait_until(const std::chrono::time_point<_Clock, _Duration>& __abs_time) const
             {return __state_->wait_until(__abs_time);}
 };
 
@@ -2566,12 +2599,12 @@ public:
     template <class _Rep, class _Period>
         _LIBCPP_INLINE_VISIBILITY
         future_status
-        wait_for(const chrono::duration<_Rep, _Period>& __rel_time) const
+        wait_for(const std::chrono::duration<_Rep, _Period>& __rel_time) const
             {return __state_->wait_for(__rel_time);}
     template <class _Clock, class _Duration>
         _LIBCPP_INLINE_VISIBILITY
         future_status
-        wait_until(const chrono::time_point<_Clock, _Duration>& __abs_time) const
+        wait_until(const std::chrono::time_point<_Clock, _Duration>& __abs_time) const
             {return __state_->wait_until(__abs_time);}
 };
 
