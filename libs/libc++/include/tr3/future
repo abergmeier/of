@@ -8,8 +8,8 @@
 //
 //===----------------------------------------------------------------------===//
 
-#ifndef _LIBCPP_FUTURE
-#define _LIBCPP_FUTURE
+#ifndef _TR3_LIBCPP_FUTURE
+#define _TR3_LIBCPP_FUTURE
 
 /*
     future synopsis
@@ -362,7 +362,7 @@ template <class R, class Alloc> struct uses_allocator<packaged_task<R>, Alloc>;
 
 */
 
-#include <__config>
+#include <tr3/__config>
 #include <system_error>
 #include <memory>
 #include <chrono>
@@ -371,7 +371,7 @@ template <class R, class Alloc> struct uses_allocator<packaged_task<R>, Alloc>;
 #include <thread>
 #include <future>
 
-_LIBCPP_BEGIN_NAMESPACE_STD
+_LIBCPP_BEGIN_NAMESPACE_TR3
 
 using std::mutex;
 using std::condition_variable;
@@ -2643,6 +2643,6 @@ future<void>::share()
 
 #endif  // _LIBCPP_HAS_NO_RVALUE_REFERENCES
 
-_LIBCPP_END_NAMESPACE_STD
+_LIBCPP_END_NAMESPACE_TR3
 
-#endif  // _LIBCPP_FUTURE
+#endif  // _TR3_LIBCPP_FUTURE

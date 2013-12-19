@@ -1,0 +1,25 @@
+// -*- C++ -*-
+//===--------------------------- __config ---------------------------------===//
+//
+//                     The LLVM Compiler Infrastructure
+//
+// This file is dual licensed under the MIT and the University of Illinois Open
+// Source Licenses. See LICENSE.TXT for details.
+//
+//===----------------------------------------------------------------------===//
+
+#ifndef _TR3_LIBCPP_CONFIG
+#define _TR3_LIBCPP_CONFIG
+
+#include <__config>
+
+#ifndef _LIBCPP_BEGIN_NAMESPACE_TR3
+#define _LIBCPP_BEGIN_NAMESPACE_TR3 namespace std { namespace tr3 {
+#endif
+
+#ifndef _LIBCPP_END_NAMESPACE_TR3
+#define _LIBCPP_END_NAMESPACE_TR3 } }
+#endif
+
+#endif //_TR3_LIBCPP_CONFIG
+
