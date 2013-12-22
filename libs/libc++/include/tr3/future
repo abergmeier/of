@@ -568,7 +568,6 @@ public:
 
     _Rp move();
     typename add_lvalue_reference<_Rp>::type copy();
-    void set_continuation(unique_ptr<__sub_cont>);
 };
 
 template <class _Rp>
