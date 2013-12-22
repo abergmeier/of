@@ -1,6 +1,6 @@
 #include <tr3/future>
 
-using namespace std::tr3;
+_LIBCPP_BEGIN_NAMESPACE_TR3
 
 future<void>
 make_ready_future()
@@ -22,4 +22,5 @@ __sub_cont::__on_zero_shared() _NOEXCEPT
     delete this;
 }
 
+_LIBCPP_END_NAMESPACE_TR3
 
