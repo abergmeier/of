@@ -507,9 +507,6 @@ _LIBCPP_DECLARE_STRONG_ENUM(future_status)
 };
 _LIBCPP_DECLARE_STRONG_ENUM_EPILOG(future_status)
 
-_LIBCPP_FUNC_VIS
-const error_category& future_category() _NOEXCEPT;
-
 inline _LIBCPP_INLINE_VISIBILITY
 error_code
 make_error_code(future_errc __e) _NOEXCEPT
@@ -524,19 +521,6 @@ make_error_condition(future_errc __e) _NOEXCEPT
     return error_condition(static_cast<int>(__e), future_category());
 }
 
-class _LIBCPP_EXCEPTION_ABI future_error
-    : public logic_error
-{
-    error_code __ec_;
-public:
-    future_error(error_code __ec);
-
-    _LIBCPP_INLINE_VISIBILITY
-    const error_code& code() const _NOEXCEPT {return __ec_;}
-
-    virtual ~future_error() _NOEXCEPT;
-};
-
 class __sub_cont
     : public __shared_count
 {
@@ -547,92 +531,14 @@ protected:
 };
 
 class _LIBCPP_TYPE_VIS __assoc_sub_state
-    : public __shared_count
+    : public std::__assoc_sub_state
 {
 protected:
-    exception_ptr __exception_;
-    mutable mutex __mut_;
-    mutable condition_variable __cv_;
-    unsigned __state_;
     unique_ptr<__sub_cont> __continuation_;
 
-    virtual void __on_zero_shared() _NOEXCEPT;
-    void __sub_wait(unique_lock<mutex>& __lk);
 public:
-    enum
-    {
-        __constructed = 1,
-        __future_attached = 2,
-        ready = 4,
-        deferred = 8
-    };
-
-    _LIBCPP_INLINE_VISIBILITY
-    __assoc_sub_state() : __state_(0) {}
-
-    _LIBCPP_INLINE_VISIBILITY
-    bool __has_value() const
-        {return (__state_ & __constructed) || (__exception_ != nullptr);}
-
-    _LIBCPP_INLINE_VISIBILITY
-    void __set_future_attached()
-    {
-        lock_guard<mutex> __lk(__mut_);
-        __state_ |= __future_attached;
-    }
-    _LIBCPP_INLINE_VISIBILITY
-    bool __has_future_attached() const {return (__state_ & __future_attached) != 0;}
-
-    _LIBCPP_INLINE_VISIBILITY
-    void __set_deferred() {__state_ |= deferred;}
-
-    void __make_ready();
-    _LIBCPP_INLINE_VISIBILITY
-    bool __is_ready() const {return (__state_ & ready) != 0;}
-
-    void set_value();
-    void set_value_at_thread_exit();
-
-    void set_exception(exception_ptr __p);
-    void set_exception_at_thread_exit(exception_ptr __p);
-
     void set_continuation(unique_ptr<__sub_cont>);
-
-    void copy();
-
-    void wait();
-    template <class _Rep, class _Period>
-        future_status
-        wait_for(const std::chrono::duration<_Rep, _Period>& __rel_time) const;
-    template <class _Clock, class _Duration>
-        future_status
-        wait_until(const std::chrono::time_point<_Clock, _Duration>& __abs_time) const;
-
-    virtual void __execute();
 };
-
-template <class _Clock, class _Duration>
-future_status
-__assoc_sub_state::wait_until(const std::chrono::time_point<_Clock, _Duration>& __abs_time) const
-{
-    unique_lock<mutex> __lk(__mut_);
-    if (__state_ & deferred)
-        return future_status::deferred;
-    while (!(__state_ & ready) && _Clock::now() < __abs_time)
-        __cv_.wait_until(__lk, __abs_time);
-    if (__state_ & ready)
-        return future_status::ready;
-    return future_status::timeout;
-}
-
-template <class _Rep, class _Period>
-inline _LIBCPP_INLINE_VISIBILITY
-future_status
-__assoc_sub_state::wait_for(const std::chrono::duration<_Rep, _Period>& __rel_time) const
-{
-    using namespace std;
-    return wait_until(std::chrono::steady_clock::now() + __rel_time);
-}
 
 template <class _Rp>
 class __assoc_state
