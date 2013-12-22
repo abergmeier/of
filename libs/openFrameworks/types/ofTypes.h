@@ -195,6 +195,10 @@ public:
 	ofPtr(const ofPtr<Tp1>& __r, std::__dynamic_cast_tag)
 	: std::shared_ptr<T>(__r, std::__dynamic_cast_tag()) { }
 #endif
+
+	template< class Y, class Deleter >
+	ofPtr( std::unique_ptr<Y,Deleter>&& r )
+	: std::shared_ptr<T>(std::forward<std::unique_ptr<Y,Deleter>>(r)) { }
 };
 
 #if (_MSC_VER)
