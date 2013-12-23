@@ -36,6 +36,8 @@ namespace of {
 	typedef map<EGLint,EGLint> EGLAttributeList;
 	typedef map<EGLint,EGLint>::iterator EGLAttributeListIterator;
 
+	extern string eglErrorString( EGLint err );
+
 	class BaseEGLWindow : public ofAppBaseWindow {
 	private:
 		typedef ofAppBaseWindow __base;

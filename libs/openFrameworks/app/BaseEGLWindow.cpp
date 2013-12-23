@@ -7,8 +7,9 @@ using namespace of;
 // from http://cantuna.googlecode.com/svn-history/r16/trunk/src/screen.cpp
 #define CASE_STR(x,y) case x: str = y; break
 
-static std::string eglErrorString(EGLint err) {
-    std::string str;
+string
+of::eglErrorString( EGLint err ) {
+	string str;
     switch (err) {
         CASE_STR(EGL_SUCCESS, "no error");
         CASE_STR(EGL_NOT_INITIALIZED, "EGL not, or could not be, initialized");
