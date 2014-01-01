@@ -94,7 +94,7 @@ void ofGLProgrammableRenderer::draw(ofMesh & vertexData, ofPolyRenderMode render
 	
 	
 	// tig: note that for GL3+ we use glPolygonMode to draw wireframes or filled meshes, and not the primitive mode.
-	// the reason is not purely aesthetic, but more conformant with the behaviour of ofGLRenderer. Whereas
+	// the reason is not purely esthetic, but more conformant with the behaviour of ofGLRenderer. Whereas
 	// gles2.0 doesn't allow for a polygonmode.
 	// Also gles2 still supports vertex array syntax for uploading data to attributes and it seems to be faster than
 	// vbo's for meshes that are updated frequently so let's use that instead
