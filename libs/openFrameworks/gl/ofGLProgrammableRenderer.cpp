@@ -1717,57 +1717,49 @@ void ofGLProgrammableRenderer::setup(){
 
 	matrixStack.setRenderSurface(*ofGetWindowPtr());
 
+	auto setup = []( ofShader& shader, string vertexShaderSource, string fragmentShaderSource ) {
+		if( !shader.setupShaderFromSource(GL_VERTEX_SHADER, vertexShaderSource) )
+			return false;
+
+		if( !shader.setupShaderFromSource(GL_FRAGMENT_SHADER, fragmentShaderSource) )
+			return false;
+
+		if( !shader.bindDefaults() )
+			return false;
+
+		return shader.linkProgram();
+	};
+
 	if(uniqueShader){
-		defaultUniqueShader().setupShaderFromSource(GL_VERTEX_SHADER,uniqueVertexShader);
-		defaultUniqueShader().setupShaderFromSource(GL_FRAGMENT_SHADER,uniqueFragmentShader);
-		defaultUniqueShader().bindDefaults();
-		defaultUniqueShader().linkProgram();
+		setup( defaultUniqueShader(), uniqueVertexShader,
+		                              uniqueFragmentShader );
 		beginDefaultShader();
 	}else{
-		defaultTexColor().setupShaderFromSource(GL_VERTEX_SHADER,defaultVertexShader);
-		defaultTex2DColor().setupShaderFromSource(GL_VERTEX_SHADER,defaultVertexShader);
-		defaultNoTexColor().setupShaderFromSource(GL_VERTEX_SHADER,defaultVertexShader);
-		defaultTexNoColor().setupShaderFromSource(GL_VERTEX_SHADER,defaultVertexShader);
-		defaultTex2DNoColor().setupShaderFromSource(GL_VERTEX_SHADER,defaultVertexShader);
-		defaultNoTexNoColor().setupShaderFromSource(GL_VERTEX_SHADER,defaultVertexShader);
+		auto setupDefault = [&]( ofShader& shader, string fragmentShaderSource ) {
+			return setup( shader, defaultVertexShader,
+			                      fragmentShaderSource );
+		};
 
-	#ifndef TARGET_OPENGLES
-		defaultTexColor().setupShaderFromSource(GL_FRAGMENT_SHADER,defaultFragmentShaderTexColor);
-		defaultTex2DColor().setupShaderFromSource(GL_FRAGMENT_SHADER,defaultFragmentShaderTex2DColor);
-	#else
-		defaultTexColor().setupShaderFromSource(GL_FRAGMENT_SHADER,defaultFragmentShaderTexColor);
-		defaultTex2DColor().setupShaderFromSource(GL_FRAGMENT_SHADER,defaultFragmentShaderTexColor);
-	#endif
-		defaultNoTexColor().setupShaderFromSource(GL_FRAGMENT_SHADER,defaultFragmentShaderNoTexColor);
-	#ifndef TARGET_OPENGLES
-		defaultTexNoColor().setupShaderFromSource(GL_FRAGMENT_SHADER,defaultFragmentShaderTexNoColor);
-		defaultTex2DNoColor().setupShaderFromSource(GL_FRAGMENT_SHADER,defaultFragmentShaderTex2DNoColor);
-	#else
-		defaultTexNoColor().setupShaderFromSource(GL_FRAGMENT_SHADER,defaultFragmentShaderTexNoColor);
-		defaultTex2DNoColor().setupShaderFromSource(GL_FRAGMENT_SHADER,defaultFragmentShaderTexNoColor);
-	#endif
-		defaultNoTexNoColor().setupShaderFromSource(GL_FRAGMENT_SHADER,defaultFragmentShaderNoTexNoColor);
+		setupDefault( defaultTexColor    (), defaultFragmentShaderTexColor     );
+		setupDefault( defaultNoTexColor  (), defaultFragmentShaderNoTexColor   );
+		setupDefault( defaultTexNoColor  (), defaultFragmentShaderTexNoColor   );
+		setupDefault( defaultNoTexNoColor(), defaultFragmentShaderNoTexNoColor );
 
+#ifdef TARGET_OPENGLES
+		setupDefault( defaultTex2DColor  (), defaultFragmentShaderTexColor     );
+#else
+		setupDefault( defaultTex2DColor  (), defaultFragmentShaderTex2DColor   );
+#endif
 
-		bitmapStringShader().setupShaderFromSource(GL_VERTEX_SHADER, bitmapStringVertexShader);
-		bitmapStringShader().setupShaderFromSource(GL_FRAGMENT_SHADER, bitmapStringFragmentShader);
+#ifdef TARGET_OPENGLES
+		setupDefault( defaultTex2DNoColor(), defaultFragmentShaderTexNoColor   );
+#else
+		setupDefault( defaultTex2DNoColor(), defaultFragmentShaderTex2DNoColor );
+#endif
 
-		defaultTexColor().bindDefaults();
-		defaultTex2DColor().bindDefaults();
-		defaultNoTexColor().bindDefaults();
-		defaultTexNoColor().bindDefaults();
-		defaultTex2DNoColor().bindDefaults();
-		defaultNoTexNoColor().bindDefaults();
+		setup( bitmapStringShader(), bitmapStringVertexShader,
+		                             bitmapStringFragmentShader );
 
-		defaultTexColor().linkProgram();
-		defaultTex2DColor().linkProgram();
-		defaultNoTexColor().linkProgram();
-		defaultTexNoColor().linkProgram();
-		defaultTex2DNoColor().linkProgram();
-		defaultNoTexNoColor().linkProgram();
-
-		bitmapStringShader().bindDefaults();
-		bitmapStringShader().linkProgram();
 	}
 
 #ifndef TARGET_OPENGLES
