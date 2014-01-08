@@ -19,6 +19,22 @@ For per-platform readmes, and more informations, see [documentation](docs/table_
 
 To set up the project generator submodule, use the command `git submodule init` then `git submodule update` whilst inside the openFrameworks repo.
 
+Compiling
+---------
+First install the necessary libraries
+
+    empkg get poco      && empkg build poco
+    empkg get kiss-fft  && empgk build kiss-fft
+    empkg get tess2     && empkg build tess2
+    empkg get sndfile   && empkg build sndfile
+    empkg get freeimage && empkg build freeimage
+    empkg get freetype  && empkg build freetype
+
+
+Then build everything via
+
+    ./rebuild
+
 Versioning
 ----------
 openFrameworks uses [Semantic Versioning](http://semver.org/), although strict adherence will only come into effect at version 1.0.0.
