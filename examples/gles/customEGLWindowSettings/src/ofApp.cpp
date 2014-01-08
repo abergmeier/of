@@ -38,6 +38,10 @@ void ofApp::draw() {
     ofTranslate(ofGetWidth()/2.0f,ofGetHeight()/2.0f);
     ofRotateZ(angle);
     ofEnableAlphaBlending();
+#ifdef TARGET_EMSCRIPTEN
+    constexpr auto scale = 0.001f;
+    ofScale( scale, scale );
+#endif
     rpiLogo.draw(-rpiLogo.width/2.0f,-rpiLogo.height/2.0f);
     ofDisableAlphaBlending();
     ofPopMatrix();
