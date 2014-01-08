@@ -226,6 +226,9 @@ enum ofTargetPlatform{
 #include "tesselator.h"
 typedef TESSindex ofIndexType;
 
+#ifndef OF_WARN_UNUSED
+#define OF_WARN_UNUSED __attribute__((warn_unused_result))
+#endif
 
 #ifndef __MWERKS__
 #include <cstdlib>
