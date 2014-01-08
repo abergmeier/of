@@ -17,7 +17,9 @@
 #include "ofGLProgrammableRenderer.h"
 #include "ofTrueTypeFont.h"
 #include "ofURLFileLoader.h"
+#ifndef TARGET_EMSCRIPTEN
 #include "Poco/Net/NetSSL.h"
+#endif
 
 
 // TODO: closing seems wonky.
@@ -230,7 +232,9 @@ void ofExitCallback(){
 
 	ofRemoveAllURLRequests();
 	ofStopURLLoader();
+#ifndef TARGET_EMSCRIPTEN
 	Poco::Net::uninitializeSSL();
+#endif
 
     ofRemoveListener(ofEvents().setup,OFSAptr.get(),&ofBaseApp::setup,OF_EVENT_ORDER_APP);
     ofRemoveListener(ofEvents().update,OFSAptr.get(),&ofBaseApp::update,OF_EVENT_ORDER_APP);
