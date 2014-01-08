@@ -805,6 +805,8 @@ ofTargetPlatform ofGetTargetPlatform(){
     } else {
         return OF_TARGET_LINUX;
     }
+#elif defined(TARGET_EMSCRIPTEN)
+    return OF_TARGET_EMSCRIPTEN;
 #elif defined(TARGET_OSX)
     return OF_TARGET_OSX;
 #elif defined(TARGET_WIN32)

@@ -24,6 +24,7 @@ enum ofTargetPlatform{
 	OF_TARGET_LINUX64,
 	OF_TARGET_LINUXARMV6L, // arm v6 little endian
 	OF_TARGET_LINUXARMV7L, // arm v7 little endian
+	OF_TARGET_EMSCRIPTEN,
 };
 
 #ifndef OF_TARGET_IPHONE
