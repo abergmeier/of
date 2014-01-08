@@ -5,8 +5,15 @@
 void ofApp::setup(){
     ofSetLogLevel(OF_LOG_VERBOSE);
 
-
-    rpiLogo.loadImage("Raspi_Colour_R.png");
+#ifdef TARGET_EMSCRIPTEN
+    auto buffer = ofBufferFromFile( "Raspi_Colour_R.png", true );
+    if( !rpiLogo.loadImage(buffer) ) {
+        ofLogError("ofApp") << "Loading image 'Raspi_Colour_R.png' failed.";
+        std::terminate();
+    }
+#else
+    rpiLogo.loadImage("Raspi_Colour_R.png").get();
+#endif
 
 }
 
