@@ -42,7 +42,15 @@ void ofApp::setup() {
 	
 	// we need to disable ARB textures in order to use normalized texcoords
 	ofDisableArbTex();
-	texture.loadImage("dot.png");
+
+#ifdef TARGET_EMSCRIPTEN
+	auto buffer = ofBufferFromFile( "dot.png", true );
+	if( !texture.loadImage( buffer ) )
+		throw std::runtime_error( "Could not load image" );
+#else
+	texture.loadImage("dot.png").get();
+#endif
+
 	ofEnableAlphaBlending();
 }
 
