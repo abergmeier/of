@@ -41,6 +41,7 @@ using namespace of::emscripten;
 extern "C" {
 	void _emscripten_show_mouse();
 	void emscripten_set_canvas_opacity( float opacity );
+	int of_device_z_rotation_deg();
 }
 
 //-------------------------------------------------------------------------------------
@@ -279,19 +280,18 @@ void ofAppEGLWindow::setOrientation(ofOrientation orientationIn){
 ofOrientation
 EGLPage::getOrientation() {
 
-	//TODO: Implement actual values
-	auto value = 0;
-	auto alpha = value / 360.0f;
-	const auto alpha_cos = cos(alpha);
-	const auto alpha_range = acos(2*PI/8);
+	const auto deg_value = of_device_z_rotation_deg();
+	const auto alpha_cos = cos( deg_value / 360.0f );
+	const auto alpha_range = acos( 2*PI/8 );
 
+	//TODO: Make edge detection smoother
 	if( alpha_cos >= alpha_range )
 		return OF_ORIENTATION_DEFAULT;
 
 	if( alpha_cos <= -alpha_range )
 		return OF_ORIENTATION_180;
 
-	if( alpha > 180 )
+	if( deg_value > 180 )
 		return OF_ORIENTATION_90_LEFT;
 
 	return OF_ORIENTATION_90_RIGHT;

@@ -49,6 +49,10 @@ namespace of {
 			void                 setupOpenGL( int w, int h, int screenMode ) override;
 			void                 runAppViaInfiniteLoop( ofBaseApp * appPtr );
 
+			// Orientation handling
+			ofOrientation        getOrientation() override;
+			bool                 doesHWOrientation() override;
+
 
 		protected:
 
