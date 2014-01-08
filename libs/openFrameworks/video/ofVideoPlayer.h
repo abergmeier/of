@@ -30,6 +30,11 @@
 	#define OF_VID_PLAYER_TYPE ofxAndroidVideoPlayer
 #endif
 
+#ifdef OF_VIDEO_PLAYER_EMSCRIPTEN
+	#include "EMVideoPlayer.hpp"
+	#define OF_VID_PLAYER_TYPE of::video::emscripten::VideoPlayer
+#endif
+
 //---------------------------------------------
 class ofVideoPlayer : public ofBaseVideoPlayer,public ofBaseVideoDraws{
 

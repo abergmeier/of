@@ -303,7 +303,7 @@ enum ofTargetPlatform{
 	#elif defined(TARGET_ANDROID)
 		#define OF_VIDEO_PLAYER_ANDROID
 	#elif defined(TARGET_EMSCRIPTEN)
-		// TODO: define video player
+		#define OF_VIDEO_PLAYER_EMSCRIPTEN
 	#elif defined(TARGET_OF_IOS)
 		#define OF_VIDEO_PLAYER_IOS
 	#elif defined(TARGET_OSX)
