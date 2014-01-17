@@ -21,7 +21,7 @@
 #endif
 
 
-#if defined(TARGET_OF_IOS) || defined(TARGET_OSX ) || defined(TARGET_LINUX)
+#if defined(TARGET_OF_IOS) || defined(TARGET_OSX ) || defined(TARGET_LINUX) || defined(TARGET_EMSCRIPTEN)
 	#include <sys/time.h>
 #endif
 
