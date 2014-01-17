@@ -46,6 +46,8 @@ static ofPtr<ofAppBaseWindow> 		window;
 	#include "ofAppAndroidWindow.h"
 #elif defined(TARGET_RASPBERRY_PI)
 	#include "ofAppEGLWindow.h"
+#elif defined(TARGET_EMSCRIPTEN)
+	#include "EGLPage.hpp"
 #else
 	#include "ofAppGLFWWindow.h"
 #endif
@@ -157,17 +159,17 @@ void ofSetupOpenGL(ofPtr<ofAppBaseWindow> windowPtr, int w, int h, int screenMod
 	window = windowPtr;
 
 	if(ofIsGLProgrammableRenderer()){
-        #if defined(TARGET_RASPBERRY_PI)
-		static_cast<ofAppEGLWindow*>(window.get())->setGLESVersion(2);
-		#elif defined(TARGET_LINUX_ARM)
+#if defined(TARGET_RASPBERRY_PI) || defined(TARGET_EMSCRIPTEN)
+		static_cast<of::BaseEGLWindow*>(window.get())->setGLESVersion(2);
+#elif defined(TARGET_LINUX_ARM)
 		static_cast<ofAppGLFWWindow*>(window.get())->setOpenGLVersion(2,0);
-		#elif !defined(TARGET_OPENGLES)
+#elif !defined(TARGET_OPENGLES)
 		static_cast<ofAppGLFWWindow*>(window.get())->setOpenGLVersion(3,2);
-		#endif
+#endif
 	}else{
-	    #if defined(TARGET_LINUX_ARM) && !defined(TARGET_RASPBERRY_PI)
+#if defined(TARGET_LINUX_ARM) && !defined(TARGET_RASPBERRY_PI)
 		static_cast<ofAppGLFWWindow*>(window.get())->setOpenGLVersion(1,0);
-		#endif
+#endif
 	}
 
 	window->setupOpenGL(w, h, screenMode);
@@ -214,6 +216,8 @@ void ofSetupOpenGL(int w, int h, int screenMode){
 		return make_unique<ofAppAndroidWindow>();
 #elif defined(TARGET_RASPBERRY_PI)
 		return make_unique<ofAppEGLWindow>();
+#elif defined(TARGET_EMSCRIPTEN)
+		return make_unique<of::emscripten::EGLPage>();
 #else
 		return make_unique<ofAppGLFWWindow>();
 #endif
