@@ -335,7 +335,7 @@ enum ofTargetPlatform{
 #if !defined(OF_SOUND_PLAYER_QUICKTIME) && !defined(OF_SOUND_PLAYER_FMOD) && !defined(OF_SOUND_PLAYER_OPENAL)
   #ifdef TARGET_OF_IOS
   	#define OF_SOUND_PLAYER_IPHONE
-  #elif defined TARGET_LINUX
+  #elif defined(TARGET_LINUX) || defined(TARGET_EMSCRIPTEN)
   	#define OF_SOUND_PLAYER_OPENAL
   #elif !defined(TARGET_ANDROID)
   	#define OF_SOUND_PLAYER_FMOD
