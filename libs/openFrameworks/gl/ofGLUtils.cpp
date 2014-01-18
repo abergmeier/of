@@ -553,8 +553,9 @@ bool ofGLSupportsNPOTTextures(){
 }
 
 ofPtr<ofGLProgrammableRenderer> ofGetGLProgrammableRenderer(){
-	if(ofGetCurrentRenderer() && ofGetCurrentRenderer()->getType()==ofGLProgrammableRenderer::TYPE){
-		return (ofPtr<ofGLProgrammableRenderer>&)ofGetCurrentRenderer();
+	auto renderer = ofGetCurrentRenderer();
+	if( renderer && renderer->getType()==ofGLProgrammableRenderer::TYPE ){
+		return static_pointer_cast<ofGLProgrammableRenderer>( renderer );
 	}else{
 		return ofPtr<ofGLProgrammableRenderer>();
 	}
@@ -565,10 +566,11 @@ bool ofIsGLProgrammableRenderer(){
 }
 
 ofPtr<ofBaseGLRenderer> ofGetGLRenderer(){
-	if(ofGetCurrentRenderer()->getType()==ofGLRenderer::TYPE || ofGetCurrentRenderer()->getType()==ofGLProgrammableRenderer::TYPE){
-		return (ofPtr<ofBaseGLRenderer>&)ofGetCurrentRenderer();
-	}else if(ofGetCurrentRenderer()->getType()==ofRendererCollection::TYPE){
-		return ((ofPtr<ofRendererCollection>&)ofGetCurrentRenderer())->getGLRenderer();
+	auto renderer = ofGetCurrentRenderer();
+	if( renderer->getType()==ofGLRenderer::TYPE || renderer->getType()==ofGLProgrammableRenderer::TYPE){
+		return static_pointer_cast<ofBaseGLRenderer>( renderer );
+	}else if( renderer->getType()==ofRendererCollection::TYPE ){
+		return static_pointer_cast<ofRendererCollection>( renderer )->getGLRenderer();
 	}else{
 		return ofPtr<ofGLRenderer>();
 	}

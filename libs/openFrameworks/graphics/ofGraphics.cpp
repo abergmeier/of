@@ -53,7 +53,7 @@ static deque <ofStyle> styleHistory;
 static deque <ofRectangle> viewportHistory;
 
 static ofPath shape;
-static ofPtr<ofBaseRenderer> renderer;
+static shared_ptr<ofBaseRenderer> renderer;
 static ofVboMesh gradientMesh;
 
 
@@ -90,7 +90,7 @@ void ofSetCurrentRenderer(ofPtr<ofBaseRenderer> renderer_,bool setDefaults){
 	}
 }
 
-ofPtr<ofBaseRenderer> & ofGetCurrentRenderer(){
+ofPtr<ofBaseRenderer> ofGetCurrentRenderer(){
 	return renderer;
 }
 

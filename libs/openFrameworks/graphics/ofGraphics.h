@@ -13,7 +13,7 @@
 
 void ofSetCurrentRenderer(ofPtr<ofBaseRenderer> renderer,bool setDefaults=false);
 void ofSetCurrentRenderer(const string & rendererType,bool setDefaults=false);
-ofPtr<ofBaseRenderer> & ofGetCurrentRenderer();
+ofPtr<ofBaseRenderer> ofGetCurrentRenderer();
 
 //for pdf screenshot
 void ofBeginSaveScreenAsPDF(string filename, bool bMultipage = false, bool b3D = false, ofRectangle viewport = ofRectangle(0,0,0,0));

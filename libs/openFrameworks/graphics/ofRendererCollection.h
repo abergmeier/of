@@ -468,5 +468,5 @@ public:
 		 }
 	}
 
-	vector<ofPtr<ofBaseRenderer> > renderers;
+	vector<shared_ptr<ofBaseRenderer> > renderers;
 };
