@@ -33,6 +33,7 @@ apps/*
 *.pyc
 .svn/
 *.log
+*.orig
 *.cpp.eep
 *.cpp.elf
 *.cpp.hex
