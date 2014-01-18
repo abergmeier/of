@@ -14,7 +14,7 @@ class of3dPrimitive;
 class ofGLRenderer: public ofBaseGLRenderer{
 public:
 	ofGLRenderer(bool useShapeColor=true);
-	~ofGLRenderer(){}
+	~ofGLRenderer() noexcept = default;
 
     static const string TYPE;
     const string & getType(){ return TYPE; }
