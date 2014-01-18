@@ -203,17 +203,19 @@ void ofGLReadyCallback(){
 
 //--------------------------------------
 void ofSetupOpenGL(int w, int h, int screenMode){
-	#ifdef TARGET_NODISPLAY
-		window = ofPtr<ofAppBaseWindow>(new ofAppNoWindow());
-	#elif defined(TARGET_OF_IOS)
-		window = ofPtr<ofAppBaseWindow>(new ofAppiOSWindow());
-	#elif defined(TARGET_ANDROID)
-		window = ofPtr<ofAppBaseWindow>(new ofAppAndroidWindow());
-	#elif defined(TARGET_RASPBERRY_PI)
-		window = ofPtr<ofAppBaseWindow>(new ofAppEGLWindow());
-    #else
-		window = ofPtr<ofAppBaseWindow>(new ofAppGLFWWindow());
-	#endif
+	window = []() -> ofPtr<ofAppBaseWindow> {
+#ifdef TARGET_NODISPLAY
+		return make_unique<ofAppNoWindow>();
+#elif defined(TARGET_OF_IOS)
+		return make_unique<ofAppiOSWindow>();
+#elif defined(TARGET_ANDROID)
+		return make_unique<ofAppAndroidWindow>();
+#elif defined(TARGET_RASPBERRY_PI)
+		return make_unique<ofAppEGLWindow>();
+#else
+		return make_unique<ofAppGLFWWindow>();
+#endif
+	}();
 
 	ofSetupOpenGL(window,w,h,screenMode);
 }
