@@ -405,6 +405,7 @@ using std::setprecision;
 using std::fixed;
 using std::bind;
 using std::function;
+using std::move;
 using std::shared_ptr;
 using std::static_pointer_cast;
 
