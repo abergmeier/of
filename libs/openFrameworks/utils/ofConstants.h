@@ -408,6 +408,7 @@ using std::bind;
 using std::function;
 using std::move;
 using std::shared_ptr;
+using std::weak_ptr;
 using std::static_pointer_cast;
 
 using std::tr3::future;

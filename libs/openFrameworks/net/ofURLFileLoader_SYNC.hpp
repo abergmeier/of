@@ -9,16 +9,13 @@
 
 #include "Poco/Condition.h"
 
-class ofURLFileLoader : public ofThread  {
+class ofURLFileLoader : public of::BaseURLFileLoader, public ofThread  {
 
     public:
-
         ofURLFileLoader();
-        future<ofHttpResponse> get(string url);
-        future<ofHttpResponse> saveTo(string url, string path);
+		of::net::shared_request get(string url) override;
+		of::net::shared_request saveTo(string url, string path) override;
 
-		void remove(int id);
-		void clear();
         void stop();
 
     protected:

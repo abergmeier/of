@@ -224,8 +224,9 @@ static future<bool>
 loadImage( ofPixels_<PixelType> & pix, string fileName ){
 
 	if(fileName.substr(0, 7) == "http://") {
-		return ofLoadURL(fileName)
-			.then( [&pix]( future<ofHttpResponse> response ) {
+		auto shared_request = ofLoadURL(fileName);
+		return shared_request
+			->response.then( [&pix, shared_request]( future<ofHttpResponse> response ) {
 				auto data = response.get().data;
 				return ofLoadImage(pix, data);
 			} );

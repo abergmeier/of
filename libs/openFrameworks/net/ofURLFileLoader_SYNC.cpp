@@ -48,35 +48,16 @@ ofURLFileLoader::ofURLFileLoader() {
 	}
 }
 
-ofHttpResponse ofURLFileLoader::get(string url) {
-    ofHttpRequest request(url,url);
-    return handleRequest(request);
+future<ofHttpResponse>
+ofURLFileLoader::get(string url) {
+	ofHttpRequest request(url,url);
+	return make_ready_future( handleRequest(request) );
 }
 
-
-int ofURLFileLoader::getAsync(string url, string name){
-	if(name=="") name=url;
-	ofHttpRequest request(url,name);
-	lock();
-	requests.push_back(request);
-	unlock();
-	start();
-	return request.getID();
-}
-
-
-ofHttpResponse ofURLFileLoader::saveTo(string url, string path){
-    ofHttpRequest request(url,path,true);
-    return handleRequest(request);
-}
-
-int ofURLFileLoader::saveAsync(string url, string path){
+future<ofHttpResponse>
+ofURLFileLoader::saveTo(string url, string path) {
 	ofHttpRequest request(url,path,true);
-	lock();
-	requests.push_back(request);
-	unlock();
-	start();
-	return request.getID();
+	return make_ready_future( handleRequest(request) );
 }
 
 void ofURLFileLoader::remove(int id){
@@ -90,7 +71,7 @@ void ofURLFileLoader::remove(int id){
 	ofLogError("ofURLFileLoader") << "remove(): request " <<  id << " not found";
 }
 
-void ofURLFileLoader::clear(){
+void ofURLFileLoader::clear() {
 	Poco::ScopedLock<ofMutex> lock(mutex);
 	requests.clear();
 	while(!responses.empty()) responses.pop();

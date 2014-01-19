@@ -10,7 +10,7 @@ namespace {
 }
 
 extern "C" {
-	void _of_url_load( unsigned int id, answer_type finish );
+	void of_url_load( unsigned int id, const char* url, answer_type finish );
 }
 
 namespace {
@@ -22,68 +22,70 @@ namespace {
 
 	ofEvent<ofHttpResponse> RESPONSE_EVENT;
 
-	map<unsigned int, promised_request> requests;
+	map<unsigned int, weak_ptr<promised_request> > requests;
 
-	decltype(requests)::mapped_type&
-	get_request( unsigned int id ) {
+	shared_ptr<promised_request>
+	find_request( unsigned int id ) {
 		auto it = requests.find( id );
 
-		assert( it != requests.end() );
-		return it->second;
+		auto shared_request = it->second.lock();
+
+		if( !shared_request ) {
+			// Cleanup
+			requests.erase( it );
+		}
+
+		return shared_request;
 	}
 
 	void
 	request_loaded( unsigned int id, int status ) {
 
-		auto& request = get_request( id );
-		auto response = ofHttpResponse{ request, status, "" };
+		auto shared_request = find_request( id );
 
-		request.response.set_value( response );
+		shared_request->response.set_value( ofHttpResponse{shared_request, status, ""} );
 	}
 
 	void
 	save_response( unsigned int id, int status ) {
 
-		auto& request = get_request( id );
-		auto response = ofHttpResponse{ request, status, "" };
-
-		request.response.set_value( response );
+		request_loaded( id, status );
 	}
 
 	unsigned int last_id = 0;
 
-	future<ofHttpResponse>
+	of::net::shared_request
 	get_url( string url, answer_type finish, string path="" ) {
-		auto insert = requests.emplace( last_id, promised_request{ std::move(url), std::move(path), false } );
+		auto shared_request = make_shared<promised_request>( std::move(url),
+		                                                     std::move(path),
+		                                                     false );
+		requests.emplace( last_id, shared_request );
 
-		_of_url_load( last_id, finish);
+		of_url_load( last_id, shared_request->url.c_str(), finish);
 
 		++last_id;
 
-		return insert.first->second.response.get_future();
+		return shared_request;
 	}
 }
 
-future<ofHttpResponse>
+using namespace of::net;
+
+shared_request
 ofLoadURL( string url ) {
 
 	return get_url( std::move(url), request_loaded );
 }
 
-future<ofHttpResponse>
+shared_request
 ofSaveURL( string url, string path ) {
 
 	return get_url( std::move(url), save_response, std::move(path) );
 }
 
 void
-ofRemoveURLRequest( future<ofHttpResponse>&& ) {
-	//TODO: Implement
-}
-
-void
 ofRemoveAllURLRequests() {
-	//TODO: Implement
+	requests.clear();
 }
 
 void
@@ -100,4 +102,16 @@ promised_request::promised_request( string url, string name, bool load ) :
 	base_type( std::move(url), std::move(name), load )
 {}
 
+URLFileLoader::URLFileLoader() {
+}
+
+shared_request
+URLFileLoader::get(string url) {
+	return ofLoadURL( move(url) );
+}
+
+shared_request
+URLFileLoader::saveTo(string url, string path) {
+	return ofSaveURL( move(url), move(path) );
+}
 
