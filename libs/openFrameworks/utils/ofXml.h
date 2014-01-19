@@ -24,6 +24,8 @@
 #include <Poco/DOM/NodeFilter.h>
 #include <Poco/DOM/NamedNodeMap.h>  
 #include <Poco/DOM/ChildNodesList.h>
+#include <map>
+using std::map;
 
 class ofXml: public ofBaseFileSerializer {
     

@@ -370,11 +370,48 @@ typedef ofBaseApp ofSimpleApp;
 #include <algorithm>
 #include <cfloat>
 #include <tr3/future>
-using namespace std;
+
+using std::istream;
+using std::istream;
+using std::ostream;
+using std::ifstream;
+using std::ofstream;
+using std::string;
+using std::filebuf;
+using std::fstream;
+using std::istringstream;
+using std::ostringstream;
+using std::stringstream;
+using std::exception_ptr;
+using std::exception;
+using std::numeric_limits;
+using std::vector;
+using std::unary_function;
+using std::bitset;
+using std::setw;
+using std::swap;
+using std::endl;
+using std::make_pair;
+using std::hex;
+using std::cout;
+using std::cerr;
+using std::setfill;
+using std::ios_base;
+using std::ios;
+using std::make_shared;
+using std::min;
+using std::fmin;
+using std::setprecision;
+using std::fixed;
+using std::bind;
+using std::function;
+using std::shared_ptr;
+using std::static_pointer_cast;
 
 using std::tr3::future;
 using std::tr3::promise;
 using std::tr3::make_ready_future;
+using std::tr3::make_unique;
 
 #ifndef PI
 	#define PI       3.14159265358979323846

@@ -7,6 +7,7 @@
 #include "ofFileUtils.h"
 #include "ofAppRunner.h"
 #include <set>
+using std::set;
 
 ALCdevice * ofOpenALSoundPlayer::alDevice = 0;
 ALCcontext * ofOpenALSoundPlayer::alContext = 0;

@@ -31,6 +31,8 @@
 #include <map>
 
 namespace of {
+	using std::map;
+
 	typedef map<EGLint,EGLint> EGLAttributeList;
 	typedef map<EGLint,EGLint>::iterator EGLAttributeListIterator;
 

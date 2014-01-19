@@ -9,6 +9,8 @@
 #include "ofGLUtils.h"
 #include <map>
 
+using std::map;
+
 #if defined( TARGET_EMSCRIPTEN )
 	#define OF_GL_FIXED        false
 	#define OF_GL_PROGRAMMABLE true
