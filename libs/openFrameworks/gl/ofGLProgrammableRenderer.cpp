@@ -61,10 +61,6 @@ ofGLProgrammableRenderer::ofGLProgrammableRenderer(bool useShapeColor)
 	currentTextureTarget = OF_NO_TEXTURE;
 }
 
-ofGLProgrammableRenderer::~ofGLProgrammableRenderer() {
-
-}
-
 //----------------------------------------------------------
 void ofGLProgrammableRenderer::startRender() {
 	matrixStack.setRenderSurface(*ofGetWindowPtr());

@@ -21,7 +21,7 @@ public:
 	template <class T>
 	using unique_ptr = std::unique_ptr<T>;
 	ofGLProgrammableRenderer(bool useShapeColor=true);
-	~ofGLProgrammableRenderer();
+	~ofGLProgrammableRenderer() noexcept = default;
 
 	void setup();
 
