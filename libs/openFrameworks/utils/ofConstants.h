@@ -411,6 +411,7 @@ using std::shared_ptr;
 using std::weak_ptr;
 using std::static_pointer_cast;
 using std::terminate;
+using std::invalid_argument;
 
 using std::tr3::future;
 using std::tr3::promise;

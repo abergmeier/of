@@ -47,9 +47,13 @@ void ofSetFrameRate(int _targetRate){
 	if (_targetRate == 0){
 		bFrameRateSet = false;
 	}else{
+#ifdef TARGET_EMSCRIPTEN
+		throw invalid_argument( "Setting a specific framerate is not supported by Emscripten." );
+#else
 		bFrameRateSet	= true;
 		targetRate		= _targetRate;
 		microsForFrame	= 1000000.0 / (double)targetRate;
+#endif
 	}
 }
 
