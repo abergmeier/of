@@ -3,23 +3,35 @@
 #include "ofConstants.h"
 #include "ofColor.h"
 
-#if (_MSC_VER)
-#include <memory>
-#else
-#include <tr1/memory>
-// import smart pointers utils into std
+#if (_MSC_VER) || _LIBCPP_VERSION
+// no tr1 in c++11
+#	include <memory>
+#	if _LIBCPP_VERSION
 namespace std {
-#if __cplusplus<201103L
+	// this is a temporary fix while ofPtr is not deprecated.
+	struct __dynamic_cast_tag { };
+}
+#	endif
+#else
+// import tr1
+// import smart pointers utils into std
+#	include <tr1/memory>
+namespace std {
+#	if __cplusplus<201103L
 	using std::tr1::shared_ptr;
 	using std::tr1::weak_ptr;
 	using std::tr1::enable_shared_from_this;
-#endif
+#	endif
 	using std::tr1::static_pointer_cast;
 	using std::tr1::dynamic_pointer_cast;
 	using std::tr1::const_pointer_cast;
 	using std::tr1::__dynamic_cast_tag;
 }
 #endif
+
+
+
+
 
 //----------------------------------------------------------
 // ofDeviceInfo
@@ -131,7 +143,6 @@ public:
       bool bAvailable;
 };
 
-
 //----------------------------------------------------------
 // ofPtr
 //----------------------------------------------------------
@@ -170,19 +181,11 @@ public:
 		ofPtr(const std::shared_ptr<Tp1>& __r)
 	: std::shared_ptr<T>(__r) { }
 
-	  /*ofPtr(ofPtr&& __r)
-	  : std::tr1::shared_ptr<T>(std::move(__r)) { }
-
-	  template<typename Tp1>
-		ofPtr(ofPtr<Tp1>&& __r)
-		: std::tr1::shared_ptr<T>(std::move(__r)) { }*/
-
 	  template<typename Tp1>
 		explicit
 		ofPtr(const std::weak_ptr<Tp1>& __r)
 	: std::shared_ptr<T>(__r) { }
 
-	// tgfrerer: extends ofPtr facade to allow dynamic_pointer_cast, pt.1
 #if (_MSC_VER)
 	template<typename Tp1>
 	ofPtr(const ofPtr<Tp1>& __r, std::_Dynamic_tag)
@@ -192,17 +195,8 @@ public:
 	ofPtr(const ofPtr<Tp1>& __r, std::__dynamic_cast_tag)
 	: std::shared_ptr<T>(__r, std::__dynamic_cast_tag()) { }
 #endif
-	  /*template<typename Tp1, typename Del>
-		explicit
-		ofPtr(const std::tr1::unique_ptr<Tp1, Del>&) = delete;
-
-	  template<typename Tp1, typename Del>
-		explicit
-		ofPtr(std::tr1::unique_ptr<Tp1, Del>&& __r)
-	: std::tr1::shared_ptr<T>(std::move(__r)) { }*/
 };
 
-// tgfrerer: extends ofPtr facade to allow dynamic_pointer_cast, pt. 2
 #if (_MSC_VER)
 template<typename _Tp, typename _Tp1>
 ofPtr<_Tp>

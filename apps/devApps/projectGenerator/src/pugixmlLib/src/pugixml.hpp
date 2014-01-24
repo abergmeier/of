@@ -27,7 +27,7 @@ namespace std
 	template <class _charT, class _Traits> class basic_istream;
 	template <class _charT, class _Traits> class basic_ostream;
 	template <class _charT, class _Traits, class _Allocator> class basic_string;
-#else
+#elsif (__cplusplus<201103L)
 	// Borland C++ compiler has a bug which forces template argument names in forward declarations to be the same as in actual definitions
 	template <class _Ty> class allocator;
 	template <class _Ty> struct char_traits;
@@ -86,6 +86,10 @@ namespace std
 #	define PUGIXML_CHAR char
 #endif
 
+#if (__cplusplus>=201103L)
+#	include <string>
+#endif
+
 namespace pugi
 {
 	// Character type used for all internal storage and operations; depends on PUGIXML_WCHAR_MODE
@@ -93,7 +97,13 @@ namespace pugi
 
 #ifndef PUGIXML_NO_STL
 	// String type used for operations that work with STL string; depends on PUGIXML_WCHAR_MODE
-	typedef std::basic_string<PUGIXML_CHAR, std::char_traits<PUGIXML_CHAR>, std::allocator<PUGIXML_CHAR> > string_t;
+#	if (__cplusplus>=201103L)
+		typedef std::basic_string<PUGIXML_CHAR> string_t;
+#	else
+		typedef std::basic_string<PUGIXML_CHAR, std::char_traits<PUGIXML_CHAR>, std::allocator<PUGIXML_CHAR> > string_t;
+#	endif
+	
+	
 #endif
 }
 
