@@ -20,8 +20,8 @@ public:
 	using array = std::array<T, N>;
 	template <class T>
 	using unique_ptr = std::unique_ptr<T>;
+
 	ofGLProgrammableRenderer(bool useShapeColor=true);
-	~ofGLProgrammableRenderer() noexcept = default;
 
 	void setup();
 
@@ -172,6 +172,8 @@ private:
 	ofMesh rectMesh;
 	ofMesh lineMesh;
 	ofVbo meshVbo;
+
+	typedef ofBaseGLRenderer base_type;
 
 #ifdef OF_BUFFER_IN_GL
 

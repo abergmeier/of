@@ -285,9 +285,31 @@ public:
 //----------------------------------------------------------
 class of3dPrimitive;
 
-class ofBaseRenderer{
+namespace of {
+	using std::bitset;
+	using RendererFeature = bitset<2>;
+
+	class RendererFeatures : public RendererFeature {
+	public:
+		RendererFeatures(                         ) noexcept = default;
+		RendererFeatures( RendererFeature feature ) noexcept;
+		RendererFeatures( const RendererFeatures& ) noexcept = default;
+		RendererFeatures( RendererFeatures&&      ) noexcept = default;
+		virtual ~RendererFeatures(                ) noexcept = default;
+		virtual bool supportsFeature(RendererFeature feature) const noexcept;
+		static constexpr RendererFeature POINTSPRITES = 1 << 1;
+		static constexpr RendererFeature ANTIALIAS    = 1 << 2;
+	private:
+		typedef RendererFeature base_type;
+	};
+}
+
+class ofBaseRenderer : public of::RendererFeatures{
 public:
-	virtual ~ofBaseRenderer(){}
+	ofBaseRenderer(                              ) noexcept = default;
+	ofBaseRenderer( of::RendererFeature features ) noexcept;
+	ofBaseRenderer( const ofBaseRenderer&        ) noexcept = default;
+	ofBaseRenderer( ofBaseRenderer&&             ) noexcept = default;
 
 	virtual const string & getType()=0;
 
@@ -395,10 +417,16 @@ public:
 
 	// returns true if the renderer can render curves without decomposing them
 	virtual bool rendersPathPrimitives()=0;
+private:
+	typedef of::RendererFeatures base_type;
 };
 
 class ofBaseGLRenderer: public ofBaseRenderer{
 public:
+	ofBaseGLRenderer() noexcept = default;
+	ofBaseGLRenderer( of::RendererFeature features ) noexcept;
+	ofBaseGLRenderer( const ofBaseGLRenderer& ) noexcept = default;
+	ofBaseGLRenderer( ofBaseGLRenderer&& ) noexcept = default;
 	virtual void setCurrentFBO(ofFbo * fbo)=0;
 
 	virtual void enableTextureTarget(int textureTarget)=0;

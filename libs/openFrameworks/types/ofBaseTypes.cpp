@@ -141,3 +141,19 @@ void ofBaseVideoPlayer::previousFrame(){
 //	ofLogWarning("ofBaseVideoPlayer") << "getPixelFormat() not implemented";
 //	return OF_PIXELS_RGB;
 //}
+
+ofBaseRenderer::ofBaseRenderer( of::RendererFeature features ) noexcept:
+	base_type{ std::move(features) }
+{}
+
+bool
+of::RendererFeatures::supportsFeature( of::RendererFeature features ) const noexcept {
+	return ((*this) & features) == features;
+}
+
+of::RendererFeatures::RendererFeatures( RendererFeature feature ) noexcept:
+	base_type{ std::move(feature) }
+{
+}
+
+

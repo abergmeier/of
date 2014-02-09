@@ -30,7 +30,19 @@ const string ofGLProgrammableRenderer::TYPE="ProgrammableGL";
 
 //----------------------------------------------------------
 ofGLProgrammableRenderer::ofGLProgrammableRenderer(bool useShapeColor)
-:matrixStack(*ofGetWindowPtr())
+:base_type{[]() {
+	auto value = of::RendererFeature{};
+#ifdef GL_MULTISAMPLE
+#define CAN_ANTIALIAS
+	value |= of::RendererFeatures::ANTIALIAS;
+#endif
+
+#if !defined(TARGET_OPENGLES) && defined(GL_PROGRAM_POINT_SIZE)
+#define CAN_POINTSPRITE
+	value |= of::RendererFeatures::POINTSPRITES;
+#endif
+	return value;
+}() }, matrixStack{*ofGetWindowPtr()}
 {
 	bBackgroundAuto = true;
 
@@ -773,31 +785,39 @@ void ofGLProgrammableRenderer::setBlendMode(ofBlendMode blendMode){
 
 //----------------------------------------------------------
 void ofGLProgrammableRenderer::enablePointSprites(){
-#ifdef TARGET_OPENGLES
-        glEnable(GL_POINT_SPRITE_OES);
-#else
+#ifdef CAN_POINTSPRITE
 	glEnable(GL_PROGRAM_POINT_SIZE);
+#else
+	base_type::enablePointSprites();
 #endif
 }
 
 //----------------------------------------------------------
 void ofGLProgrammableRenderer::disablePointSprites(){
-#ifdef TARGET_OPENGLES
-        glEnable(GL_POINT_SPRITE_OES);
-#else
+#ifdef CAN_POINTSPRITE
 	glDisable(GL_PROGRAM_POINT_SIZE);
+#else
+	base_type::disablePointSprites();
 #endif
 }
 
 
 //----------------------------------------------------------
 void ofGLProgrammableRenderer::enableAntiAliasing(){
+#ifdef CAN_ANTIALIAS
 	glEnable(GL_MULTISAMPLE);
+#else
+	base_type::enableAntiAliasing();
+#endif
 }
 
 //----------------------------------------------------------
 void ofGLProgrammableRenderer::disableAntiAliasing(){
+#ifdef CAN_ANTIALIAS
 	glDisable(GL_MULTISAMPLE);
+#else
+	base_type::disableAntiAliasing();
+#endif
 }
 
 //----------------------------------------------------------
