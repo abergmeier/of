@@ -10,6 +10,7 @@
 #include "ofFbo.h"
 #include "ofVbo.h"
 #include "of3dPrimitives.h"
+#include <cassert>
 
 static const int OF_NO_TEXTURE=-1;
 
@@ -61,7 +62,7 @@ ofGLProgrammableRenderer::ofGLProgrammableRenderer(bool useShapeColor)
 }
 
 ofGLProgrammableRenderer::~ofGLProgrammableRenderer() {
-	
+
 }
 
 //----------------------------------------------------------
@@ -97,38 +98,35 @@ void ofGLProgrammableRenderer::draw(ofMesh & vertexData, ofPolyRenderMode render
 	// the reason is not purely esthetic, but more conformant with the behaviour of ofGLRenderer. Whereas
 	// gles2.0 doesn't allow for a polygonmode.
 	// Also gles2 still supports vertex array syntax for uploading data to attributes and it seems to be faster than
-	// vbo's for meshes that are updated frequently so let's use that instead
+	// vbo's for meshes that are updated frequently so let's use that by default
 	
 	if (bSmoothHinted) startSmoothing();
 
 #ifdef TARGET_OPENGLES
-	glEnableVertexAttribArray(ofShader::POSITION_ATTRIBUTE);
-	glVertexAttribPointer(ofShader::POSITION_ATTRIBUTE, 3, GL_FLOAT, GL_FALSE, sizeof(ofVec3f), vertexData.getVerticesPointer());
-	
+
+	const auto element_count = [&]() {
+		auto index_count = vertexData.getNumIndices();
+
+		assert( index_count >= 0 && index_count <= numeric_limits<unsigned short>::max() );
+
+		if( index_count == 0 )
+			index_count = vertexData.getNumVertices();
+
+		assert( index_count >= 0 && index_count <= numeric_limits<unsigned short>::max() );
+
+		return static_cast<unsigned short>( index_count );
+	}();
+
+	enableAndBindAttribute<ofShader::POSITION_ATTRIBUTE, false, 3>( true       , element_count, vertexData.getVerticesPointer()  );
+
 	useNormals &= (vertexData.getNumNormals()>0);
-	if(useNormals){
-		glEnableVertexAttribArray(ofShader::NORMAL_ATTRIBUTE);
-		glVertexAttribPointer(ofShader::NORMAL_ATTRIBUTE, 3, GL_FLOAT, GL_TRUE, sizeof(ofVec3f), vertexData.getNormalsPointer());
-	}else{
-		glDisableVertexAttribArray(ofShader::NORMAL_ATTRIBUTE);
-	}
+	enableAndBindAttribute<ofShader::NORMAL_ATTRIBUTE  , true , 3>( useNormals , element_count, vertexData.getNormalsPointer()   );
 	
 	useColors &= (vertexData.getNumColors()>0);
-	if(useColors){
-		glEnableVertexAttribArray(ofShader::COLOR_ATTRIBUTE);
-		glVertexAttribPointer(ofShader::COLOR_ATTRIBUTE, 4,GL_FLOAT, GL_FALSE, sizeof(ofFloatColor), vertexData.getColorsPointer());
-	}else{
-		glDisableVertexAttribArray(ofShader::COLOR_ATTRIBUTE);
-	}
+	enableAndBindAttribute<ofShader::COLOR_ATTRIBUTE   , false, 4>( useColors  , element_count, vertexData.getColorsPointer()    );
 
 	useTextures &= (vertexData.getNumTexCoords()>0);
-	if(useTextures){
-		glEnableVertexAttribArray(ofShader::TEXCOORD_ATTRIBUTE);
-		glVertexAttribPointer(ofShader::TEXCOORD_ATTRIBUTE,2, GL_FLOAT, GL_FALSE, sizeof(ofVec2f), vertexData.getTexCoordsPointer());
-	}else{
-		glDisableVertexAttribArray(ofShader::TEXCOORD_ATTRIBUTE);
-	}
-
+	enableAndBindAttribute<ofShader::TEXCOORD_ATTRIBUTE, false, 2>( useTextures, element_count, vertexData.getTexCoordsPointer() );
 
 	setAttributes(true,useColors,useTextures,useNormals);
 
@@ -149,9 +147,10 @@ void ofGLProgrammableRenderer::draw(ofMesh & vertexData, ofPolyRenderMode render
 	}
 
 	if(vertexData.getNumIndices()){
-		glDrawElements(drawMode, vertexData.getNumIndices(),GL_UNSIGNED_SHORT,vertexData.getIndexPointer());
+		std::cout << "WARN!" << std::endl;
+		glDrawElements(drawMode, element_count, GL_UNSIGNED_SHORT, vertexData.getIndexPointer());
 	}else{
-		glDrawArrays(drawMode, 0, vertexData.getNumVertices());
+		glDrawArrays(drawMode, 0, element_count);
 	}
 #else
 
@@ -203,8 +202,7 @@ void ofGLProgrammableRenderer::draw(ofPolyline & poly){
 
 #ifdef TARGET_OPENGLES
 
-	glEnableVertexAttribArray(ofShader::POSITION_ATTRIBUTE);
-	glVertexAttribPointer(ofShader::POSITION_ATTRIBUTE, 3, GL_FLOAT, GL_FALSE, sizeof(ofVec3f), &poly[0]);
+	enableAndBindAttribute<ofShader::POSITION_ATTRIBUTE, false, 3>( true, poly.size(), &poly[0] );
 
 	setAttributes(true,false,false,false);
 
@@ -1762,7 +1760,12 @@ void ofGLProgrammableRenderer::setup(){
 
 	}
 
-#ifndef TARGET_OPENGLES
+#ifdef TARGET_OPENGLES
+#ifdef OF_BUFFER_IN_GL
+
+	_glBuffers = make_unique<typename decltype(_glBuffers)::element_type>();
+#endif // OF_BUFFER_IN_GL
+#else
 	circleMesh.setUsage(GL_STREAM_DRAW);
 	triangleMesh.setUsage(GL_STREAM_DRAW);
 	rectMesh.setUsage(GL_STREAM_DRAW);
@@ -1810,3 +1813,14 @@ ofShader & ofGLProgrammableRenderer::bitmapStringShader(){
 	static ofShader * shader = new ofShader;
 	return *shader;
 }
+
+#if defined(TARGET_OPENGLES) && defined(OF_BUFFER_IN_GL)
+ofGLProgrammableRenderer::glBuffers::glBuffers() noexcept {
+	glGenBuffers( size(), data() );
+}
+
+ofGLProgrammableRenderer::glBuffers::~glBuffers() noexcept {
+	glDeleteBuffers( size(), data() );
+}
+#endif
+

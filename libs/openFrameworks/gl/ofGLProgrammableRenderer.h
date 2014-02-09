@@ -8,6 +8,7 @@
 
 
 #include <stack>
+#include <array>
 class ofShapeTessellation;
 class ofMesh;
 class ofFbo;
@@ -15,6 +16,10 @@ class ofVbo;
 
 class ofGLProgrammableRenderer: public ofBaseGLRenderer{
 public:
+	template <class T, size_t N>
+	using array = std::array<T, N>;
+	template <class T>
+	using unique_ptr = std::unique_ptr<T>;
 	ofGLProgrammableRenderer(bool useShapeColor=true);
 	~ofGLProgrammableRenderer();
 
@@ -167,6 +172,15 @@ private:
 	ofMesh rectMesh;
 	ofMesh lineMesh;
 	ofVbo meshVbo;
+
+#ifdef OF_BUFFER_IN_GL
+
+	struct glBuffers : public array<GLuint, ofShader::defaultAttributes::SIZE> {
+		glBuffers() noexcept;
+		~glBuffers() noexcept;
+	};
+	unique_ptr<glBuffers> _glBuffers;
+#endif
 #else
 	ofVboMesh circleMesh;
 	ofVboMesh triangleMesh;
@@ -175,6 +189,40 @@ private:
 	ofVbo meshVbo;
 	ofVbo vertexDataVbo;
 #endif
+
+	template< GLuint AttributeIndex, GLint ComponentCount, bool Normalized>
+	void
+	bindAttribute( unsigned short element_count, const GLvoid* data ) {
+
+#ifdef OF_BUFFER_IN_GL
+
+		glBindBuffer( GL_ARRAY_BUFFER, (*_glBuffers)[AttributeIndex] );
+		glBufferData( GL_ARRAY_BUFFER, (ComponentCount * sizeof(float)) * element_count,
+		              data, GL_DYNAMIC_DRAW );
+
+		data = 0;
+#endif
+
+		glVertexAttribPointer( AttributeIndex, ComponentCount, GL_FLOAT,
+		                       Normalized ? GL_TRUE : GL_FALSE,
+		                       ComponentCount * sizeof(float), data );
+
+#ifdef OF_BUFFER_IN_GL
+		glBindBuffer( GL_ARRAY_BUFFER, 0 );
+#endif
+	}
+
+	template< GLuint AttributeIndex, bool Normalized, GLint ComponentCount >
+	void
+	enableAndBindAttribute( bool enabled, unsigned short element_count, const GLvoid* data ) {
+
+		if( enabled ) {
+			glEnableVertexAttribArray( AttributeIndex );
+			bindAttribute<AttributeIndex, ComponentCount, Normalized>( element_count, data );
+		} else {
+			glDisableVertexAttribArray( AttributeIndex );
+		}
+	}
 
 	void uploadCurrentMatrix();
 

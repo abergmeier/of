@@ -127,11 +127,12 @@ public:
 
 
 	// these are used only for openGL ES2 or GL3/4 using the programmable GL renderer
-	enum defaultAttributes{
+	enum defaultAttributes : GLuint {
 		POSITION_ATTRIBUTE=0,  // tig: was =1, and BOY, what a performance hog this was!!! see: http://www.chromium.org/nativeclient/how-tos/3d-tips-and-best-practices
 		COLOR_ATTRIBUTE,
 		NORMAL_ATTRIBUTE,
-		TEXCOORD_ATTRIBUTE
+		TEXCOORD_ATTRIBUTE,
+		SIZE                   // Keep this at the end to be able to get size
 	};
 
 

@@ -238,6 +238,7 @@ enum ofTargetPlatform{
 
 	#define TARGET_NO_SOUND
 	#define USE_PROGRAMMABLE_GL
+	#define OF_BUFFER_IN_GL
 #endif //TARGET_EMSCRIPTEN
 
 #ifndef OF_WARN_UNUSED
