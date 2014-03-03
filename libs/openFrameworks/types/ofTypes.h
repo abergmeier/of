@@ -146,6 +146,9 @@ public:
 //----------------------------------------------------------
 // ofPtr
 //----------------------------------------------------------
+template<typename T>
+using ofPtr = shared_ptr<T>;
+#if 0
 template <typename T>
 class ofPtr: public std::shared_ptr<T>
 {
@@ -212,3 +215,5 @@ ofPtr<_Tp>
 	dynamic_pointer_cast(const ofPtr<_Tp1>& __r)
 { return ofPtr<_Tp>(__r, std::__dynamic_cast_tag()); }
 #endif
+#endif
+
