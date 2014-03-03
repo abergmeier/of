@@ -358,6 +358,7 @@ template <class R>
 
 template <class R, class Alloc> struct uses_allocator<packaged_task<R>, Alloc>;
 
+}  // experimental
 }  // std
 
 */
@@ -370,6 +371,10 @@ template <class R, class Alloc> struct uses_allocator<packaged_task<R>, Alloc>;
 #include <mutex>
 #include <thread>
 #include <future>
+
+#if !defined(_LIBCPP_HAS_NO_PRAGMA_SYSTEM_HEADER)
+#pragma GCC system_header
+#endif
 
 _LIBCPP_BEGIN_NAMESPACE_TR3
 
@@ -2764,4 +2769,5 @@ make_ready_future();
 
 _LIBCPP_END_NAMESPACE_TR3
 
-#endif  // _TR3_LIBCPP_FUTURE
+#endif  // _LIBCPP_EXP_FUTURE && _LIBCPP_STD_VER > 11
+
